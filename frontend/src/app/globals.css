@@ -1,0 +1,30 @@
+@import "tailwindcss";
+
+@theme {
+  /* Custom Colors */
+  --color-isoko-dark: #063B1F;
+  --color-isoko-primary: #0B5D2A;
+  --color-isoko-accent: #4C9F38;
+  --color-isoko-light: #EAF4E3;
+
+  /* Custom Fonts (Linking to Next.js Font Variables) */
+  --font-jakarta: var(--font-jakarta);
+  --font-inter: var(--font-inter);
+}
+
+:root {
+  --foreground: #111111;
+  --background: #ffffff;
+}
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+  /* Use the Jakarta font by default for the whole body */
+  font-family: var(--font-jakarta), ui-sans-serif, system-ui;
+}
+
+/* Optional: Smooth scrolling for the whole site */
+html {
+  scroll-behavior: smooth;
+}
