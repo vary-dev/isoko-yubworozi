@@ -1,78 +1,178 @@
 "use client";
-import Link from 'next/link';
-import { MSquare, Mail, Phone, MapPin, ArrowRight, AArrowDown, Globe } from 'lucide-react';
+import Link from "next/link";
 
 export default function Footer() {
   return (
-    <footer className="bg-isoko-dark text-white pt-20 pb-10">
-      <div className="max-w-7xl mx-auto px-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">
-          
-          {/* Brand Column */}
-          <div className="space-y-6">
-            <h2 className="text-2xl font-bold">ISOKO<span className="text-isoko-accent">.</span></h2>
-            <p className="text-gray-400 text-sm leading-relaxed">
-              Empowering farmers with practical knowledge. We provide digital tools and guides to modernize agriculture and livestock farming in Rwanda.
+    <footer className="bg-isoko-dark text-white pt-16 pb-8">
+      <div className="max-w-7xl mx-auto px-5 lg:px-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 mb-12">
+          {/* Brand */}
+          <div className="sm:col-span-2 lg:col-span-1">
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-8 h-8 bg-white/10 rounded-lg flex items-center justify-center text-isoko-accent text-sm">
+                <i className="fa-solid fa-seedling"></i>
+              </div>
+              <span className="text-xl font-black tracking-tight">
+                ISOKO<span className="text-isoko-accent">.</span>
+              </span>
+            </div>
+            <p className="text-gray-400 text-sm leading-relaxed mb-5 max-w-xs">
+              Empowering Rwandan farmers with practical knowledge, digital
+              tools, and expert guides for modern livestock and poultry farming.
             </p>
-            <div className="flex gap-4">
-              <Link href="https://youtube.com/@Isokoyubworozi" className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center hover:bg-isoko-accent transition">
-                <MSquare size={20} />
-              </Link>
-              <Link href="#" className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center hover:bg-isoko-accent transition">
-                <Globe size={20} />
-              </Link>
-              <Link href="#" className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center hover:bg-isoko-accent transition">
-                <AArrowDown size={20} />
-              </Link>
+            <div className="flex gap-3">
+              <a
+                href="https://youtube.com/@Isokoyubworozi"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-9 h-9 bg-white/8 rounded-lg flex items-center justify-center hover:bg-red-600 transition text-gray-400 hover:text-white"
+              >
+                <i className="fa-brands fa-youtube text-sm"></i>
+              </a>
+              <a
+                href="#"
+                className="w-9 h-9 bg-white/8 rounded-lg flex items-center justify-center hover:bg-isoko-accent transition text-gray-400 hover:text-white"
+              >
+                <i className="fa-brands fa-facebook-f text-sm"></i>
+              </a>
+              <a
+                href="#"
+                className="w-9 h-9 bg-white/8 rounded-lg flex items-center justify-center hover:bg-isoko-accent transition text-gray-400 hover:text-white"
+              >
+                <i className="fa-brands fa-instagram text-sm"></i>
+              </a>
             </div>
           </div>
 
           {/* Quick Links */}
           <div>
-            <h4 className="text-lg font-bold mb-6">Quick Links</h4>
-            <ul className="space-y-4 text-gray-400 text-sm">
-              <li><Link href="/" className="hover:text-isoko-accent transition">Home</Link></li>
-              <li><Link href="/about" className="hover:text-isoko-accent transition">About Us</Link></li>
-              <li><Link href="/topics" className="hover:text-isoko-accent transition">Farming Topics</Link></li>
-              <li><Link href="/contact" className="hover:text-isoko-accent transition">Contact</Link></li>
+            <h4 className="text-sm font-black uppercase tracking-wider mb-5 text-white">
+              Quick Links
+            </h4>
+            <ul className="space-y-3 text-sm">
+              <li>
+                <Link
+                  href="/"
+                  className="text-gray-400 hover:text-isoko-accent transition"
+                >
+                  Home
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/videos"
+                  className="text-gray-400 hover:text-isoko-accent transition"
+                >
+                  Video Tutorials
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/blog"
+                  className="text-gray-400 hover:text-isoko-accent transition"
+                >
+                  Farming Blog
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/books"
+                  className="text-gray-400 hover:text-isoko-accent transition"
+                >
+                  Digital Books
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/about"
+                  className="text-gray-400 hover:text-isoko-accent transition"
+                >
+                  About Us
+                </Link>
+              </li>
             </ul>
           </div>
 
           {/* Resources */}
           <div>
-            <h4 className="text-lg font-bold mb-6">Resources</h4>
-            <ul className="space-y-4 text-gray-400 text-sm">
-              <li><Link href="/videos" className="hover:text-isoko-accent transition">Video Tutorials</Link></li>
-              <li><Link href="/blog" className="hover:text-isoko-accent transition">Farming Blog</Link></li>
-              <li><Link href="/books" className="hover:text-isoko-accent transition">Digital Books</Link></li>
-              <li><Link href="/resources" className="hover:text-isoko-accent transition">Free Guides</Link></li>
+            <h4 className="text-sm font-black uppercase tracking-wider mb-5 text-white">
+              Resources
+            </h4>
+            <ul className="space-y-3 text-sm">
+              <li>
+                <a
+                  href="https://youtube.com/@Isokoyubworozi"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-gray-400 hover:text-isoko-accent transition"
+                >
+                  YouTube Channel
+                </a>
+              </li>
+              <li>
+                <Link
+                  href="/blog"
+                  className="text-gray-400 hover:text-isoko-accent transition"
+                >
+                  Market Insights
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/blog"
+                  className="text-gray-400 hover:text-isoko-accent transition"
+                >
+                  Technical Advice
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/blog"
+                  className="text-gray-400 hover:text-isoko-accent transition"
+                >
+                  Seasonal Tips
+                </Link>
+              </li>
             </ul>
           </div>
 
           {/* Newsletter */}
           <div>
-            <h4 className="text-lg font-bold mb-6">Subscribe</h4>
-            <p className="text-gray-400 text-sm mb-6">Get the latest farming tips and updates delivered to your inbox.</p>
-            <form className="relative">
-              <input 
-                type="email" 
-                placeholder="Your email address" 
-                className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 text-sm focus:outline-none focus:border-isoko-accent transition"
+            <h4 className="text-sm font-black uppercase tracking-wider mb-5 text-white">
+              Stay Updated
+            </h4>
+            <p className="text-gray-400 text-sm mb-4">
+              Get farming tips delivered to your inbox.
+            </p>
+            <form className="space-y-3" onSubmit={(e) => e.preventDefault()}>
+              <input
+                type="email"
+                placeholder="Your email address"
+                className="w-full bg-white/5 border border-white/10 rounded-lg py-3 px-4 text-sm focus:outline-none focus:border-isoko-accent transition placeholder:text-gray-500"
               />
-              <button className="absolute right-2 top-2 bg-isoko-accent p-1.5 rounded-lg hover:scale-105 transition">
-                <ArrowRight size={18} />
+              <button
+                type="submit"
+                className="w-full bg-isoko-accent text-white py-3 rounded-lg text-sm font-bold uppercase tracking-wider hover:bg-isoko-primary transition"
+              >
+                Subscribe
               </button>
             </form>
           </div>
-
         </div>
 
         {/* Bottom Bar */}
-        <div className="pt-8 border-t border-white/10 flex flex-col md:flex-row justify-between items-center gap-4 text-gray-500 text-xs">
-          <p>© {new Date().getFullYear()} Isoko Yubworozi. All rights reserved.</p>
-          <div className="flex gap-8">
-            <Link href="/privacy" className="hover:text-white transition">Privacy Policy</Link>
-            <Link href="/terms" className="hover:text-white transition">Terms of Service</Link>
+        <div className="pt-6 border-t border-white/8 flex flex-col sm:flex-row justify-between items-center gap-3 text-gray-500 text-xs">
+          <p>
+            &copy; {new Date().getFullYear()} Isoko y&apos;Ubworozi. All rights
+            reserved.
+          </p>
+          <div className="flex gap-6">
+            <Link href="/privacy" className="hover:text-white transition">
+              Privacy Policy
+            </Link>
+            <Link href="/terms" className="hover:text-white transition">
+              Terms of Service
+            </Link>
           </div>
         </div>
       </div>

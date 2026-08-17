@@ -3,16 +3,17 @@ import {
     createBook, 
     getBooks, 
     getBookById, 
-    deleteBook 
+    deleteBook,
+    updateBook 
 } from '../controllers/bookController';
-import { uploadImage } from '../middleware/upload';
+import { uploadCombined } from '../middleware/upload';
 
 const router = express.Router();
 
 // @route   POST /api/books
 router.post(
   '/', 
-  uploadImage.fields([
+  uploadCombined.fields([
     { name: 'coverImage', maxCount: 1 },
     { name: 'fileUrl', maxCount: 1 }
   ]), 
@@ -24,6 +25,16 @@ router.get('/', getBooks);
 
 // @route   GET /api/books/:id
 router.get('/:id', getBookById);
+
+// @route   PUT /api/books/:id
+router.put(
+  '/:id',
+  uploadCombined.fields([
+    { name: 'coverImage', maxCount: 1 },
+    { name: 'fileUrl', maxCount: 1 }
+  ]),
+  updateBook
+);
 
 // @route   DELETE /api/books/:id
 router.delete('/:id', deleteBook);

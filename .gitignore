@@ -2,18 +2,33 @@
 node_modules/
 .pnpm-store/
 .yarn/
-package-lock.json
-yarn.lock
-pnpm-lock.yaml
 
-# Environment Variables & Secrets
+# Local Environment & Secrets
 .env
 .env*.local
 .env.production
+.env.development
 *.pem
 *.key
 
-# Logs
+# Backend Output (TypeScript compile target)
+backend/dist/
+backend/build/
+
+# Next.js Frontend Output & Cache
+frontend/.next/
+frontend/out/
+frontend/build/
+.next/
+
+# Backend File Uploads & Temp Storage (Multer / Cloudinary temp files)
+uploads/
+backend/uploads/
+temp/
+backend/temp/
+*.tmp
+
+# Debug Logs
 logs/
 *.log
 npm-debug.log*
@@ -21,24 +36,17 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 
-# Next.js Build Outputs
-.next/
-out/
-build/
-dist/
-
-# Operating System & IDE Files
+# System & Editor Files
 .DS_Store
 Thumbs.db
 .vscode/
 .idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
 
 # Testing & Coverage
 coverage/
 .nyc_output/
-*.lcov
-
-# Temporary & Cache Files
-.cache/
-*.tmp
-*.bak

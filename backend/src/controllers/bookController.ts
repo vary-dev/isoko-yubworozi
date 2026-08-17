@@ -32,9 +32,9 @@ export const createBook = async (req: Request, res: Response) => {
 
     await newBook.save();
     res.status(201).json(newBook);
-  } catch (error) {
-    console.error("Upload Error:", error);
-    res.status(500).json({ message: 'Error uploading book', error });
+  } catch (error: any) {
+    console.error("Upload Error:", error?.message || error);
+    res.status(500).json({ message: 'Error uploading book', error: error?.message || error });
   }
 };
 
@@ -42,7 +42,7 @@ export const createBook = async (req: Request, res: Response) => {
  * @desc    Get all books
  * @route   GET /api/books
  */
-export const getBooks = async (req: Request, res: Response) => {
+export const getBooks = async (_req: Request, res: Response) => {
   try {
     const books = await Book.find().sort({ createdAt: -1 });
     res.status(200).json(books);
@@ -76,5 +76,38 @@ export const deleteBook = async (req: Request, res: Response) => {
     res.status(200).json({ message: 'Book deleted successfully' });
   } catch (error) {
     res.status(500).json({ message: 'Error deleting book', error });
+  }
+};
+
+/**
+ * @desc    Update a book
+ * @route   PUT /api/books/:id
+ */
+export const updateBook = async (req: Request, res: Response) => {
+  try {
+    const { title, description, category, price, isPremium } = req.body;
+    const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+
+    const updateData: Record<string, any> = {
+      title,
+      description,
+      category,
+      price: Number(price) || 0,
+      isPremium: isPremium === 'true' || isPremium === true,
+    };
+
+    // If new files were uploaded, update their paths
+    if (files?.['coverImage']?.[0]?.path) {
+      updateData.coverImage = files['coverImage'][0].path;
+    }
+    if (files?.['fileUrl']?.[0]?.path) {
+      updateData.fileUrl = files['fileUrl'][0].path;
+    }
+
+    const book = await Book.findByIdAndUpdate(req.params.id, updateData, { new: true });
+    if (!book) return res.status(404).json({ message: 'Book not found' });
+    res.status(200).json(book);
+  } catch (error) {
+    res.status(500).json({ message: 'Error updating book', error });
   }
 };
