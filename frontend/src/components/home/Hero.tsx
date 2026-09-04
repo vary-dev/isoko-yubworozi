@@ -7,7 +7,7 @@ export default function Hero() {
   const [videoLoaded, setVideoLoaded] = useState(false);
 
   return (
-    <section className="relative w-full h-[85vh] min-h-[580px] bg-isoko-dark flex items-center overflow-hidden">
+    <section aria-labelledby="hero-title" className="relative w-full min-h-[680px] h-[92svh] max-h-[920px] bg-isoko-dark flex items-center overflow-hidden">
       {/* Background Video + Fallback */}
       <div className="absolute inset-0 z-0">
         {!videoLoaded && (
@@ -25,8 +25,11 @@ export default function Hero() {
           loop
           playsInline
           onLoadedData={() => setVideoLoaded(true)}
+          preload="metadata"
+          poster="https://images.unsplash.com/photo-1516467508483-a7212febe31a?q=70&w=1600&auto=format&fit=crop"
+          aria-hidden="true"
           className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ${
-            videoLoaded ? "opacity-30" : "opacity-0"
+            videoLoaded ? "opacity-35" : "opacity-0"
           }`}
         >
           <source
@@ -41,7 +44,7 @@ export default function Hero() {
       <div className="absolute inset-0 z-10 bg-gradient-to-t from-isoko-dark/60 via-transparent to-transparent" />
 
       {/* Content */}
-      <div className="max-w-7xl mx-auto px-5 lg:px-8 w-full relative z-20">
+      <div className="max-w-7xl mx-auto px-5 sm:px-8 lg:px-10 w-full relative z-20 pt-20">
         <div className="max-w-2xl">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -55,7 +58,7 @@ export default function Hero() {
               </span>
             </div>
 
-            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black text-white leading-[1.05] mb-6">
+            <h1 id="hero-title" className="text-[clamp(2.65rem,8vw,5rem)] font-black text-white leading-[1.02] mb-6 text-balance">
               Farm Smarter.
               <br />
               <span className="bg-gradient-to-r from-isoko-accent to-[#7BC96F] bg-clip-text text-transparent">
@@ -69,12 +72,12 @@ export default function Hero() {
               modernize your farm.
             </p>
 
-            <div className="flex flex-wrap gap-4">
+            <div className="flex flex-col xs:flex-row sm:flex-row gap-3 sm:gap-4">
               <a
                 href="https://youtube.com/@Isokoyubworozi"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group flex items-center gap-3 bg-[#FF0000] text-white px-8 py-4 rounded-xl font-black text-sm uppercase tracking-wide hover:bg-[#E00000] transition-all shadow-xl shadow-red-500/20"
+                className="group flex min-h-12 items-center justify-center gap-3 bg-[#e00000] text-white px-6 sm:px-8 py-4 rounded-xl font-black text-sm uppercase tracking-wide hover:bg-[#bd0000] hover:-translate-y-0.5 transition-all shadow-xl shadow-red-950/30"
               >
                 <i className="fa-brands fa-youtube text-lg"></i>
                 Watch Tutorials
@@ -82,14 +85,14 @@ export default function Hero() {
 
               <Link
                 href="/blog"
-                className="flex items-center gap-3 bg-white/10 backdrop-blur-xl border border-white/20 text-white px-8 py-4 rounded-xl font-black text-sm uppercase tracking-wide hover:bg-white/20 transition-all"
+                className="flex min-h-12 items-center justify-center gap-3 bg-white/10 backdrop-blur-xl border border-white/30 text-white px-6 sm:px-8 py-4 rounded-xl font-black text-sm uppercase tracking-wide hover:bg-white/20 hover:-translate-y-0.5 transition-all"
               >
                 Read Articles
               </Link>
             </div>
 
             {/* Quick stats */}
-            <div className="flex gap-8 mt-12 pt-8 border-t border-white/10">
+            <div className="grid grid-cols-3 gap-3 sm:gap-8 mt-10 sm:mt-12 pt-7 sm:pt-8 border-t border-white/15 max-w-xl">
               <div>
                 <p className="text-2xl font-black text-white">100+</p>
                 <p className="text-[11px] text-white/50 font-bold uppercase tracking-wider">

@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import LanguageSwitcher from "./LanguageSwitcher";
 
 const navLinks = [
@@ -13,6 +14,7 @@ const navLinks = [
 ];
 
 export default function Navbar() {
+  const pathname = usePathname();
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -22,8 +24,13 @@ export default function Navbar() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  useEffect(() => {
+    document.body.style.overflow = mobileOpen ? "hidden" : "";
+    return () => { document.body.style.overflow = ""; };
+  }, [mobileOpen]);
+
   return (
-    <nav
+    <nav aria-label="Primary navigation"
       className={`fixed top-0 w-full z-50 nav-transition ${
         isScrolled
           ? "bg-white/95 backdrop-blur-md shadow-lg py-3"
@@ -32,7 +39,7 @@ export default function Navbar() {
     >
       <div className="max-w-7xl mx-auto px-5 lg:px-8 flex items-center justify-between">
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-2 shrink-0">
+        <Link href="/" aria-label="Isoko y'Ubworozi home" className="flex items-center gap-2 shrink-0 rounded-lg">
           <div
             className={`w-9 h-9 rounded-lg flex items-center justify-center text-sm font-black ${
               isScrolled
@@ -40,7 +47,7 @@ export default function Navbar() {
                 : "bg-white/15 text-isoko-accent backdrop-blur-sm"
             }`}
           >
-            <i className="fa-solid fa-seedling"></i>
+            <i aria-hidden="true" className="fa-solid fa-seedling"></i>
           </div>
           <span
             className={`text-xl font-black tracking-tight ${
@@ -58,9 +65,10 @@ export default function Navbar() {
             <Link
               key={link.name}
               href={link.href}
+              aria-current={pathname === link.href ? "page" : undefined}
               className={`text-[13px] font-bold uppercase tracking-widest transition-colors hover:text-isoko-accent ${
                 isScrolled ? "text-isoko-dark" : "text-white/90"
-              }`}
+              } ${pathname === link.href ? "text-isoko-accent" : ""}`}
             >
               {link.name}
             </Link>
@@ -77,13 +85,17 @@ export default function Navbar() {
             rel="noopener noreferrer"
             className="hidden sm:flex items-center gap-2 bg-[#FF0000] text-white px-4 py-2 rounded-lg text-[11px] font-black uppercase tracking-wider hover:bg-[#CC0000] transition-all shadow-md"
           >
-            <i className="fa-brands fa-youtube text-sm"></i>
+            <i aria-hidden="true" className="fa-brands fa-youtube text-sm"></i>
             Subscribe
           </a>
 
           {/* Mobile Toggle */}
           <button
+            type="button"
             onClick={() => setMobileOpen(!mobileOpen)}
+            aria-label={mobileOpen ? "Close menu" : "Open menu"}
+            aria-expanded={mobileOpen}
+            aria-controls="mobile-navigation"
             className={`lg:hidden w-10 h-10 rounded-lg flex items-center justify-center transition ${
               isScrolled
                 ? "bg-gray-100 text-isoko-dark"
@@ -91,7 +103,7 @@ export default function Navbar() {
             }`}
           >
             <i
-              className={`fa-solid ${
+              aria-hidden="true" className={`fa-solid ${
                 mobileOpen ? "fa-xmark" : "fa-bars"
               } text-lg`}
             ></i>
@@ -115,31 +127,38 @@ export default function Navbar() {
               animate={{ x: 0 }}
               exit={{ x: "100%" }}
               transition={{ type: "spring", damping: 25, stiffness: 250 }}
-              className="fixed top-0 right-0 w-72 h-full bg-white z-50 lg:hidden flex flex-col shadow-2xl"
+              id="mobile-navigation"
+              role="dialog"
+              aria-modal="true"
+              aria-label="Mobile navigation"
+              className="fixed top-0 right-0 w-[min(88vw,22rem)] h-full bg-white z-50 lg:hidden flex flex-col shadow-2xl"
             >
               <div className="p-6 border-b border-gray-100 flex items-center justify-between">
                 <span className="text-lg font-black text-isoko-dark tracking-tight">
                   ISOKO<span className="text-isoko-accent">.</span>
                 </span>
                 <button
+                  type="button"
                   onClick={() => setMobileOpen(false)}
+                  aria-label="Close menu"
                   className="w-9 h-9 bg-gray-100 rounded-lg flex items-center justify-center text-gray-500"
                 >
                   <i className="fa-solid fa-xmark"></i>
                 </button>
               </div>
-              <nav className="flex-1 p-6 space-y-1">
+              <div role="navigation" aria-label="Mobile links" className="flex-1 p-6 space-y-1">
                 {navLinks.map((link) => (
                   <Link
                     key={link.name}
                     href={link.href}
+                    aria-current={pathname === link.href ? "page" : undefined}
                     onClick={() => setMobileOpen(false)}
-                    className="block px-4 py-3 rounded-lg text-sm font-bold text-isoko-dark uppercase tracking-wider hover:bg-isoko-light/40 hover:text-isoko-primary transition"
+                    className={`block px-4 py-3 rounded-lg text-sm font-bold uppercase tracking-wider hover:bg-isoko-light/40 hover:text-isoko-primary transition ${pathname === link.href ? "bg-isoko-light/60 text-isoko-primary" : "text-isoko-dark"}`}
                   >
                     {link.name}
                   </Link>
                 ))}
-              </nav>
+              </div>
               <div className="p-6 border-t border-gray-100">
                 <a
                   href="https://youtube.com/@Isokoyubworozi"
