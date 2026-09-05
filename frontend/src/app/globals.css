@@ -11,6 +11,7 @@
 
 :root {
   --nav-height: 72px;
+  --focus-ring: #f4b942;
 }
 
 * {
@@ -19,6 +20,7 @@
 
 html {
   scroll-behavior: smooth;
+  scroll-padding-top: calc(var(--nav-height) + 1rem);
 }
 
 body {
@@ -28,6 +30,50 @@ body {
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+a, button, input, textarea, select {
+  -webkit-tap-highlight-color: transparent;
+}
+
+:focus-visible {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 3px;
+}
+
+.skip-link {
+  position: fixed;
+  left: 1rem;
+  top: 1rem;
+  z-index: 100;
+  transform: translateY(-180%);
+  border-radius: .75rem;
+  background: #fff;
+  color: var(--color-isoko-dark);
+  padding: .75rem 1rem;
+  font-weight: 800;
+  box-shadow: 0 10px 30px rgb(0 0 0 / .2);
+  transition: transform .2s ease;
+}
+
+.skip-link:focus { transform: translateY(0); }
+
+::selection { background: var(--color-isoko-accent); color: #fff; }
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: .01ms !important;
+  }
+  video[autoplay] { display: none; }
+}
+
+@media (prefers-contrast: more) {
+  :root { --color-isoko-accent: #2e7d20; }
+  body { color: #090909; }
 }
 
 h1, h2, h3, h4, h5, h6 {
