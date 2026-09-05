@@ -3,6 +3,8 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { fetchVideos } from "@/lib/api";
 import Link from "next/link";
+import ContentSkeleton from "@/components/ui/ContentSkeleton";
+import { useI18n } from "@/lib/i18n";
 
 interface Video {
   _id: string;
@@ -14,6 +16,7 @@ interface Video {
 }
 
 export default function VideoGallery() {
+  const { t } = useI18n();
   const [videos, setVideos] = useState<Video[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -31,34 +34,24 @@ export default function VideoGallery() {
         <div className="flex items-end justify-between mb-10">
           <div>
             <p className="text-[11px] font-black uppercase tracking-[0.2em] text-red-500 mb-2">
-              YouTube Channel
+              {t("videos.eyebrow")}
             </p>
             <h2 className="text-3xl font-black text-isoko-dark">
-              Latest Tutorials
+              {t("videos.title")}
             </h2>
           </div>
           <Link
             href="/videos"
             className="hidden sm:flex items-center gap-2 text-sm font-bold text-isoko-primary hover:text-isoko-accent transition"
           >
-            View All
+            {t("common.viewAll")}
             <i className="fa-solid fa-arrow-right text-xs"></i>
           </Link>
         </div>
 
         {/* Loading */}
         {loading && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="rounded-xl overflow-hidden">
-                <div className="aspect-video bg-gray-100 animate-pulse" />
-                <div className="pt-3 space-y-2">
-                  <div className="h-3 bg-gray-100 rounded animate-pulse w-16" />
-                  <div className="h-4 bg-gray-100 rounded animate-pulse" />
-                </div>
-              </div>
-            ))}
-          </div>
+          <ContentSkeleton count={3} />
         )}
 
         {/* Video Grid */}
@@ -116,7 +109,7 @@ export default function VideoGallery() {
           <div className="text-center py-16 bg-gray-50 rounded-xl border border-gray-100">
             <i className="fa-brands fa-youtube text-4xl text-gray-200 mb-3"></i>
             <p className="text-gray-400 font-bold text-sm">
-              No videos yet. Check our{" "}
+              {t("videos.empty")} {" "}
               <a
                 href="https://youtube.com/@Isokoyubworozi"
                 target="_blank"

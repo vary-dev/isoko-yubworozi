@@ -4,6 +4,9 @@ import { motion } from "framer-motion";
 import { fetchBooks } from "@/lib/api";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
+import PageHero from "@/components/ui/PageHero";
+import ContentSkeleton from "@/components/ui/ContentSkeleton";
+import { useI18n } from "@/lib/i18n";
 
 interface Book {
   _id: string;
@@ -18,6 +21,7 @@ interface Book {
 }
 
 export default function BooksPage() {
+  const { t } = useI18n();
   const [books, setBooks] = useState<Book[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("All");
@@ -41,37 +45,7 @@ export default function BooksPage() {
     <main>
       <Navbar />
 
-      {/* Page Header */}
-      <section className="pt-32 pb-12 bg-gradient-to-br from-isoko-dark via-isoko-primary to-isoko-dark relative overflow-hidden">
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-10 right-20 w-72 h-72 bg-blue-500 rounded-full blur-3xl" />
-          <div className="absolute bottom-0 left-10 w-48 h-48 bg-isoko-accent rounded-full blur-3xl" />
-        </div>
-        <div className="max-w-7xl mx-auto px-5 lg:px-8 relative z-10">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-          >
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
-                <i className="fa-solid fa-book-open text-white text-lg"></i>
-              </div>
-              <span className="text-blue-400 uppercase font-black tracking-[0.2em] text-[11px]">
-                Knowledge Library
-              </span>
-            </div>
-            <h1 className="text-4xl sm:text-5xl font-black text-white mb-3">
-              Farming Books
-            </h1>
-            <p className="text-white/60 max-w-lg text-base leading-relaxed">
-              Downloadable PDF guides covering broiler production, egg farming,
-              pig rearing, and more — written by farming experts for Rwandan
-              farmers.
-            </p>
-          </motion.div>
-        </div>
-      </section>
+      <PageHero eyebrow={t("library.eyebrow")} title={t("library.title")} body={t("library.body")} icon="fa-solid fa-book-open" image="https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?q=80&w=1800&auto=format&fit=crop" />
 
       {/* Content */}
       <section className="py-16 bg-gray-50/60 min-h-[60vh]">
@@ -89,34 +63,14 @@ export default function BooksPage() {
                       : "bg-white text-gray-500 border border-gray-200 hover:border-isoko-accent hover:text-isoko-accent"
                   }`}
                 >
-                  {cat}
+                  {cat === "All" ? t("common.all") : cat}
                 </button>
               ))}
             </div>
           )}
 
           {/* Loading */}
-          {loading && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {[1, 2, 3].map((i) => (
-                <div
-                  key={i}
-                  className="bg-white rounded-xl border border-gray-100 overflow-hidden"
-                >
-                  <div className="flex gap-5 p-5">
-                    <div className="w-28 h-40 bg-gray-200 animate-pulse rounded-lg shrink-0" />
-                    <div className="flex-1 space-y-3 py-1">
-                      <div className="h-3 bg-gray-100 rounded animate-pulse w-16" />
-                      <div className="h-4 bg-gray-100 rounded animate-pulse" />
-                      <div className="h-3 bg-gray-50 rounded animate-pulse w-full" />
-                      <div className="h-3 bg-gray-50 rounded animate-pulse w-2/3" />
-                      <div className="h-8 bg-gray-100 rounded-lg animate-pulse w-24 mt-4" />
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
+          {loading && <ContentSkeleton count={6} variant="book" />}
 
           {/* Books Grid */}
           {!loading && filtered.length > 0 && (
@@ -154,7 +108,7 @@ export default function BooksPage() {
                         </span>
                         {book.isPremium && (
                           <span className="text-[9px] font-black uppercase bg-yellow-100 text-yellow-700 px-1.5 py-0.5 rounded tracking-wider">
-                            Premium
+                            {t("library.premium")}
                           </span>
                         )}
                       </div>
@@ -175,11 +129,11 @@ export default function BooksPage() {
                             <i className="fa-solid fa-download text-[10px]"></i>
                             {book.price > 0
                               ? `${book.price.toLocaleString()} RWF`
-                              : "Free Download"}
+                              : t("library.download")}
                           </a>
                         ) : (
                           <span className="text-xs text-gray-400 font-medium italic">
-                            Coming soon
+                            {t("library.soon")}
                           </span>
                         )}
                       </div>
@@ -199,7 +153,7 @@ export default function BooksPage() {
               <p className="text-gray-400 font-bold text-sm">
                 {filter !== "All"
                   ? `No books found in "${filter}" category.`
-                  : "No books available yet. Check back soon!"}
+                  : t("library.empty")}
               </p>
             </div>
           )}

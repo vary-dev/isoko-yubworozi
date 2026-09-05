@@ -4,6 +4,9 @@ import { motion } from "framer-motion";
 import { fetchVideos } from "@/lib/api";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
+import PageHero from "@/components/ui/PageHero";
+import ContentSkeleton from "@/components/ui/ContentSkeleton";
+import { useI18n } from "@/lib/i18n";
 
 interface Video {
   _id: string;
@@ -15,6 +18,7 @@ interface Video {
 }
 
 export default function VideosPage() {
+  const { t } = useI18n();
   const [videos, setVideos] = useState<Video[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("All");
@@ -51,37 +55,7 @@ export default function VideosPage() {
     <main>
       <Navbar />
 
-      {/* Page Header */}
-      <section className="pt-32 pb-12 bg-gradient-to-br from-isoko-dark via-isoko-primary to-isoko-dark relative overflow-hidden">
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-10 right-20 w-72 h-72 bg-red-500 rounded-full blur-3xl" />
-          <div className="absolute bottom-0 left-10 w-48 h-48 bg-isoko-accent rounded-full blur-3xl" />
-        </div>
-        <div className="max-w-7xl mx-auto px-5 lg:px-8 relative z-10">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-          >
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 bg-red-600 rounded-lg flex items-center justify-center">
-                <i className="fa-brands fa-youtube text-white text-lg"></i>
-              </div>
-              <span className="text-red-400 uppercase font-black tracking-[0.2em] text-[11px]">
-                YouTube Channel
-              </span>
-            </div>
-            <h1 className="text-4xl sm:text-5xl font-black text-white mb-3">
-              Video Tutorials
-            </h1>
-            <p className="text-white/60 max-w-lg text-base leading-relaxed">
-              Watch our weekly farming tutorials on poultry, livestock, feed
-              formulation, and farm management. Practical knowledge you can
-              apply on your farm today.
-            </p>
-          </motion.div>
-        </div>
-      </section>
+      <PageHero eyebrow={t("videos.eyebrow")} title={t("videos.title")} body={t("videos.body")} icon="fa-brands fa-youtube" image="https://images.unsplash.com/photo-1548550023-2bdb3c5beed7?q=80&w=1800&auto=format&fit=crop" />
 
       {/* Filter + Content */}
       <section className="py-16 bg-gray-50/60 min-h-[60vh]">
@@ -99,26 +73,14 @@ export default function VideosPage() {
                       : "bg-white text-gray-500 border border-gray-200 hover:border-isoko-accent hover:text-isoko-accent"
                   }`}
                 >
-                  {cat}
+                  {cat === "All" ? t("common.all") : cat}
                 </button>
               ))}
             </div>
           )}
 
           {/* Loading */}
-          {loading && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {[1, 2, 3, 4, 5, 6].map((i) => (
-                <div key={i} className="rounded-xl overflow-hidden">
-                  <div className="aspect-video bg-gray-200 animate-pulse" />
-                  <div className="pt-3 space-y-2">
-                    <div className="h-3 bg-gray-200 rounded animate-pulse w-16" />
-                    <div className="h-4 bg-gray-200 rounded animate-pulse" />
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
+          {loading && <ContentSkeleton count={6} />}
 
           {/* Video Grid */}
           {!loading && filtered.length > 0 && (
@@ -183,7 +145,7 @@ export default function VideosPage() {
               <p className="text-gray-400 font-bold text-sm mb-4">
                 {filter !== "All"
                   ? `No videos found in "${filter}" category.`
-                  : "No videos published yet."}
+                  : t("videos.empty")}
               </p>
               <a
                 href="https://youtube.com/@Isokoyubworozi"
