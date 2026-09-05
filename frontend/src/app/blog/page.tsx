@@ -4,6 +4,9 @@ import { motion } from "framer-motion";
 import { fetchArticles } from "@/lib/api";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
+import PageHero from "@/components/ui/PageHero";
+import ContentSkeleton from "@/components/ui/ContentSkeleton";
+import { useI18n } from "@/lib/i18n";
 
 interface Article {
   _id: string;
@@ -17,6 +20,7 @@ interface Article {
 }
 
 export default function BlogPage() {
+  const { t, locale } = useI18n();
   const [articles, setArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("All");
@@ -38,7 +42,7 @@ export default function BlogPage() {
     filter === "All" ? articles : articles.filter((a) => a.category === filter);
 
   const formatDate = (dateStr: string) =>
-    new Date(dateStr).toLocaleDateString("en-US", {
+    new Date(dateStr).toLocaleDateString(locale === "rw" ? "rw-RW" : locale === "fr" ? "fr-FR" : "en-US", {
       month: "long",
       day: "numeric",
       year: "numeric",
@@ -56,7 +60,7 @@ export default function BlogPage() {
               className="flex items-center gap-2 text-sm font-bold text-isoko-primary hover:text-isoko-accent transition mb-8"
             >
               <i className="fa-solid fa-arrow-left text-xs"></i>
-              Back to Articles
+              {t("blog.back")}
             </button>
 
             <div className="flex items-center gap-3 mb-4">
@@ -73,7 +77,7 @@ export default function BlogPage() {
             </h1>
 
             <p className="text-sm text-gray-400 mb-8">
-              By{" "}
+              {t("blog.by")}{" "}
               <span className="font-bold text-isoko-primary">
                 {selected.author}
               </span>
@@ -104,37 +108,7 @@ export default function BlogPage() {
     <main>
       <Navbar />
 
-      {/* Page Header */}
-      <section className="pt-32 pb-12 bg-gradient-to-br from-isoko-dark via-isoko-primary to-isoko-dark relative overflow-hidden">
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-10 left-20 w-72 h-72 bg-isoko-accent rounded-full blur-3xl" />
-          <div className="absolute bottom-0 right-10 w-48 h-48 bg-white rounded-full blur-3xl" />
-        </div>
-        <div className="max-w-7xl mx-auto px-5 lg:px-8 relative z-10">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-          >
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 bg-isoko-accent rounded-lg flex items-center justify-center">
-                <i className="fa-solid fa-newspaper text-white text-lg"></i>
-              </div>
-              <span className="text-isoko-accent uppercase font-black tracking-[0.2em] text-[11px]">
-                Farming Blog
-              </span>
-            </div>
-            <h1 className="text-4xl sm:text-5xl font-black text-white mb-3">
-              Farming Insights
-            </h1>
-            <p className="text-white/60 max-w-lg text-base leading-relaxed">
-              In-depth articles on market trends, seasonal tips, vaccination
-              schedules, feed formulation, and everything you need to run a
-              successful farm.
-            </p>
-          </motion.div>
-        </div>
-      </section>
+      <PageHero eyebrow={t("blog.eyebrow")} title={t("blog.title")} body={t("blog.body")} icon="fa-solid fa-newspaper" image="https://images.unsplash.com/photo-1500595046743-cd271d694d30?q=80&w=1800&auto=format&fit=crop" />
 
       {/* Content */}
       <section className="py-16 bg-gray-50/60 min-h-[60vh]">
@@ -152,30 +126,14 @@ export default function BlogPage() {
                       : "bg-white text-gray-500 border border-gray-200 hover:border-isoko-accent hover:text-isoko-accent"
                   }`}
                 >
-                  {cat}
+                  {cat === "All" ? t("common.all") : cat}
                 </button>
               ))}
             </div>
           )}
 
           {/* Loading */}
-          {loading && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {[1, 2, 3, 4, 5, 6].map((i) => (
-                <div
-                  key={i}
-                  className="bg-white rounded-xl border border-gray-100 overflow-hidden"
-                >
-                  <div className="aspect-[16/10] bg-gray-200 animate-pulse" />
-                  <div className="p-5 space-y-3">
-                    <div className="h-3 bg-gray-100 rounded animate-pulse w-20" />
-                    <div className="h-4 bg-gray-100 rounded animate-pulse" />
-                    <div className="h-3 bg-gray-50 rounded animate-pulse w-3/4" />
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
+          {loading && <ContentSkeleton count={6} />}
 
           {/* Articles Grid */}
           {!loading && filtered.length > 0 && (
@@ -220,7 +178,7 @@ export default function BlogPage() {
                       {article.content.replace(/<[^>]+>/g, "").slice(0, 120)}...
                     </p>
                     <span className="inline-flex items-center gap-1.5 text-isoko-accent text-xs font-bold mt-3 group-hover:gap-2.5 transition-all">
-                      Read More{" "}
+                      {t("blog.read")}{" "}
                       <i className="fa-solid fa-arrow-right text-[9px]"></i>
                     </span>
                   </div>
@@ -238,7 +196,7 @@ export default function BlogPage() {
               <p className="text-gray-400 font-bold text-sm">
                 {filter !== "All"
                   ? `No articles found in "${filter}" category.`
-                  : "No articles published yet. Check back soon!"}
+                  : t("blog.empty")}
               </p>
             </div>
           )}

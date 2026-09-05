@@ -2,6 +2,7 @@ import { Plus_Jakarta_Sans, Inter } from "next/font/google";
 import "./globals.css";
 import type { Metadata, Viewport } from "next";
 import Script from "next/script";
+import Providers from "@/components/Providers";
 
 const jakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
@@ -56,7 +57,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${jakarta.variable} ${inter.variable}`} suppressHydrationWarning>
+    <html lang="rw" className={`${jakarta.variable} ${inter.variable}`} suppressHydrationWarning>
       <head>
         <link
           rel="stylesheet"
@@ -65,28 +66,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className="antialiased selection:bg-isoko-accent selection:text-white">
         <a className="skip-link" href="#main-content">Skip to main content</a>
-        {/* Google Translate */}
-        <div id="google_translate_element" className="hidden" />
-        <Script
-          id="google-translate-init"
-          strategy="afterInteractive"
-          dangerouslySetInnerHTML={{
-            __html: `
-              function googleTranslateElementInit() {
-                new google.translate.TranslateElement({
-                  pageLanguage: 'en',
-                  includedLanguages: 'en,rw,fr',
-                  layout: google.translate.TranslateElement.InlineLayout.SIMPLE,
-                  autoDisplay: false
-                }, 'google_translate_element');
-              }
-            `,
-          }}
-        />
-        <Script
-          src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"
-          strategy="lazyOnload"
-        />
         <Script
           id="isoko-structured-data"
           type="application/ld+json"
@@ -100,7 +79,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             description: "Digital poultry and livestock farming education platform.",
           }) }}
         />
-        {children}
+        <Providers>{children}</Providers>
       </body>
     </html>
   );

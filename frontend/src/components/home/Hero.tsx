@@ -2,9 +2,11 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
+import { useI18n } from "@/lib/i18n";
 
 export default function Hero() {
   const [videoLoaded, setVideoLoaded] = useState(false);
+  const { t } = useI18n();
 
   return (
     <section aria-labelledby="hero-title" className="relative w-full min-h-[680px] h-[92svh] max-h-[920px] bg-isoko-dark flex items-center overflow-hidden">
@@ -54,22 +56,20 @@ export default function Hero() {
             <div className="flex items-center gap-3 mb-5">
               <span className="h-[2px] w-10 bg-isoko-accent"></span>
               <span className="text-isoko-accent uppercase font-black tracking-[0.25em] text-[11px]">
-                Rwanda&apos;s Farming Platform
+                {t("hero.eyebrow")}
               </span>
             </div>
 
             <h1 id="hero-title" className="text-[clamp(2.65rem,8vw,5rem)] font-black text-white leading-[1.02] mb-6 text-balance">
-              Farm Smarter.
+              {t("hero.title")}
               <br />
               <span className="bg-gradient-to-r from-isoko-accent to-[#7BC96F] bg-clip-text text-transparent">
-                Live Better.
+                {t("hero.titleAccent")}
               </span>
             </h1>
 
             <p className="text-white/70 text-base sm:text-lg mb-9 leading-relaxed max-w-lg font-medium">
-              Your trusted source for livestock and poultry farming knowledge.
-              Access free guides, video tutorials, and expert advice to
-              modernize your farm.
+              {t("hero.body")}
             </p>
 
             <div className="flex flex-col xs:flex-row sm:flex-row gap-3 sm:gap-4">
@@ -80,14 +80,14 @@ export default function Hero() {
                 className="group flex min-h-12 items-center justify-center gap-3 bg-[#e00000] text-white px-6 sm:px-8 py-4 rounded-xl font-black text-sm uppercase tracking-wide hover:bg-[#bd0000] hover:-translate-y-0.5 transition-all shadow-xl shadow-red-950/30"
               >
                 <i className="fa-brands fa-youtube text-lg"></i>
-                Watch Tutorials
+                {t("hero.watch")}
               </a>
 
               <Link
                 href="/blog"
                 className="flex min-h-12 items-center justify-center gap-3 bg-white/10 backdrop-blur-xl border border-white/30 text-white px-6 sm:px-8 py-4 rounded-xl font-black text-sm uppercase tracking-wide hover:bg-white/20 hover:-translate-y-0.5 transition-all"
               >
-                Read Articles
+                {t("hero.read")}
               </Link>
             </div>
 
@@ -96,19 +96,19 @@ export default function Hero() {
               <div>
                 <p className="text-2xl font-black text-white">100+</p>
                 <p className="text-[11px] text-white/50 font-bold uppercase tracking-wider">
-                  Video Tutorials
+                  {t("hero.videos")}
                 </p>
               </div>
               <div>
                 <p className="text-2xl font-black text-white">5K+</p>
                 <p className="text-[11px] text-white/50 font-bold uppercase tracking-wider">
-                  Farmers Reached
+                  {t("hero.farmers")}
                 </p>
               </div>
               <div>
                 <p className="text-2xl font-black text-white">Weekly</p>
                 <p className="text-[11px] text-white/50 font-bold uppercase tracking-wider">
-                  New Content
+                  {t("hero.new")}
                 </p>
               </div>
             </div>
