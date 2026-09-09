@@ -23,6 +23,10 @@ const copy = {
     "footer.body": "Helping farmers build healthier, more productive poultry businesses with practical knowledge in languages they understand.",
     "footer.links": "Quick links", "footer.resources": "Resources", "footer.updates": "Stay informed", "footer.updateBody": "Receive useful farming updates.",
     "footer.email": "Email address", "footer.rights": "All rights reserved.", "footer.privacy": "Privacy", "footer.terms": "Terms",
+    "footer.vet": "Veterinary guidance", "footer.vaccine": "Vaccination plans", "footer.feed": "Feed efficiency", "footer.finance": "Farm finance",
+    "footer.payments": "Accepted payments", "footer.paymentBody": "Secure, familiar ways to access premium farming resources.", "footer.paymentSecure": "Payments are securely processed.",
+    "story.eyebrow": "Built for East African farmers", "story.title": "Veterinary science made practical.", "story.body": "Isoko y'Ubworozi connects expert animal-health knowledge with the daily decisions that make poultry farms productive, sustainable and profitable.", "story.health": "Disease prevention", "story.feed": "Low-cost feeding", "story.business": "Farm profitability",
+    "cta.title": "See every lesson in action.", "cta.body": "Follow field demonstrations, vaccination guidance and practical poultry masterclasses on our YouTube channel.", "cta.visit": "Visit YouTube",
   },
   rw: {
     "nav.home": "Ahabanza", "nav.videos": "Amashusho", "nav.blog": "Inyandiko", "nav.library": "Isomero", "nav.about": "Ibyacu", "nav.contact": "Twandikire",
@@ -42,6 +46,10 @@ const copy = {
     "footer.body": "Dufasha aborozi kugira inkoko nzima n'ubworozi butanga umusaruro dukoresheje ubumenyi ngiro mu ndimi bumva.",
     "footer.links": "Aho wakanda", "footer.resources": "Ubumenyi", "footer.updates": "Menya amakuru", "footer.updateBody": "Jya ubona inama z'ubworozi.",
     "footer.email": "Imeyili yawe", "footer.rights": "Uburenganzira bwose burabitswe.", "footer.privacy": "Amabanga", "footer.terms": "Amategeko",
+    "footer.vet": "Inama z'abaganga b'amatungo", "footer.vaccine": "Gahunda z'inkingo", "footer.feed": "Imikoreshereze myiza y'ibiryo", "footer.finance": "Imari y'ubworozi",
+    "footer.payments": "Uburyo bwo kwishyura", "footer.paymentBody": "Uburyo bwizewe kandi bumenyerewe bwo kubona ubumenyi bwihariye.", "footer.paymentSecure": "Ubwishyu butunganywa mu buryo bwizewe.",
+    "story.eyebrow": "Byagenewe aborozi bo muri Afurika y'Iburasirazuba", "story.title": "Ubumenyi bw'amatungo bushyizwe mu bikorwa.", "story.body": "Isoko y'Ubworozi ihuza ubumenyi bw'inzobere n'ibyemezo bya buri munsi bifasha ubworozi bw'inkoko gutanga umusaruro no kunguka.", "story.health": "Kurinda indwara", "story.feed": "Ibiryo bihendutse", "story.business": "Inyungu y'ubworozi",
+    "cta.title": "Reba uko buri somo rikorwa.", "cta.body": "Kurikira imyitozo yo mu bworozi, gahunda z'inkingo n'amasomo ngiro ku rubuga rwacu rwa YouTube.", "cta.visit": "Jya kuri YouTube",
   },
   fr: {
     "nav.home": "Accueil", "nav.videos": "Vidéos", "nav.blog": "Articles", "nav.library": "Bibliothèque", "nav.about": "À propos", "nav.contact": "Contact",
@@ -61,6 +69,10 @@ const copy = {
     "footer.body": "Nous aidons les éleveurs à bâtir des fermes avicoles saines et productives grâce à des conseils pratiques dans leur langue.",
     "footer.links": "Liens rapides", "footer.resources": "Ressources", "footer.updates": "Restez informé", "footer.updateBody": "Recevez nos conseils d'élevage.",
     "footer.email": "Adresse e-mail", "footer.rights": "Tous droits réservés.", "footer.privacy": "Confidentialité", "footer.terms": "Conditions",
+    "footer.vet": "Conseils vétérinaires", "footer.vaccine": "Plans de vaccination", "footer.feed": "Efficacité alimentaire", "footer.finance": "Finances agricoles",
+    "footer.payments": "Paiements acceptés", "footer.paymentBody": "Des moyens familiers et sécurisés d'accéder aux ressources premium.", "footer.paymentSecure": "Les paiements sont traités en toute sécurité.",
+    "story.eyebrow": "Conçu pour les éleveurs d'Afrique de l'Est", "story.title": "La science vétérinaire rendue pratique.", "story.body": "Isoko y'Ubworozi relie l'expertise en santé animale aux décisions quotidiennes qui rendent l'aviculture productive, durable et rentable.", "story.health": "Prévention des maladies", "story.feed": "Alimentation économique", "story.business": "Rentabilité agricole",
+    "cta.title": "Voyez chaque leçon en pratique.", "cta.body": "Suivez les démonstrations, les conseils de vaccination et les formations avicoles sur notre chaîne YouTube.", "cta.visit": "Voir YouTube",
   },
 } as const;
 
