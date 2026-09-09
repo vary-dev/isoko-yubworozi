@@ -5,6 +5,7 @@ import { fetchArticles } from "@/lib/api";
 import Link from "next/link";
 import ContentSkeleton from "@/components/ui/ContentSkeleton";
 import { useI18n } from "@/lib/i18n";
+import Image from "next/image";
 
 interface Article {
   _id: string;
@@ -75,12 +76,12 @@ export default function Insights() {
                 viewport={{ once: true }}
                 className="bg-white rounded-xl border border-gray-100 overflow-hidden group hover:shadow-lg transition-all"
               >
-                <div className="aspect-[16/10] overflow-hidden bg-gray-100">
+                <div className="relative aspect-[16/10] overflow-hidden bg-gray-100">
                   {article.image ? (
-                    <img
+                    <Image fill sizes="(max-width: 768px) 100vw, 33vw"
                       src={article.image}
                       alt={article.title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      className="object-cover group-hover:scale-105 transition-transform duration-500"
                     />
                   ) : (
                     <div className="w-full h-full bg-gradient-to-br from-isoko-light to-gray-100 flex items-center justify-center">
