@@ -1,34 +1,30 @@
 "use client";
-
 import { useState } from "react";
-import Menu from "@mui/material/Menu";
-import MenuItem from "@mui/material/MenuItem";
 import { useI18n, type Locale } from "@/lib/i18n";
 
-const languages: { code: Locale; short: string; name: string; flag: string }[] = [
-  { code: "rw", short: "KIN", name: "Kinyarwanda", flag: "🇷🇼" },
-  { code: "en", short: "EN", name: "English", flag: "🇬🇧" },
-  { code: "fr", short: "FR", name: "Français", flag: "🇫🇷" },
+const languages: { code: Locale; short: string; name: string }[] = [
+  { code: "rw", short: "KIN", name: "Kinyarwanda" }, { code: "en", short: "EN", name: "English" }, { code: "fr", short: "FR", name: "Français" },
 ];
 
 export default function LanguageSwitcher({ isScrolled }: { isScrolled: boolean }) {
   const { locale, setLocale, t } = useI18n();
-  const [anchor, setAnchor] = useState<HTMLElement | null>(null);
-  const active = languages.find((language) => language.code === locale)!;
-
+  const [open, setOpen] = useState(false);
+  const active = languages.find((item) => item.code === locale)!;
   return (
-    <>
-      <button type="button" onClick={(event) => setAnchor(event.currentTarget)} aria-haspopup="menu" aria-expanded={Boolean(anchor)} aria-label={`${t("language.choose")}: ${active.name}`}
-        className={`min-h-10 flex items-center gap-2 px-3 rounded-xl text-xs font-black tracking-wider transition border ${isScrolled ? "border-gray-200 bg-white text-isoko-dark hover:border-isoko-accent" : "border-white/25 bg-white/10 text-white hover:bg-white/20"}`}>
-        <span aria-hidden="true">{active.flag}</span><span>{active.short}</span><i aria-hidden="true" className="fa-solid fa-chevron-down text-[8px] opacity-60" />
+    <div className="relative">
+      <button type="button" onClick={() => setOpen(!open)} aria-haspopup="listbox" aria-expanded={open} aria-label={`${t("language.choose")}: ${active.name}`}
+        className={`flex min-h-11 items-center gap-2 rounded-full border px-3.5 text-xs font-extrabold transition ${isScrolled ? "border-isoko-dark/10 bg-white text-isoko-dark shadow-sm" : "border-white/20 bg-white/10 text-white backdrop-blur-xl"}`}>
+        <i aria-hidden="true" className="fa-solid fa-globe" />{active.short}<i aria-hidden="true" className="fa-solid fa-chevron-down text-[8px] opacity-60" />
       </button>
-      <Menu anchorEl={anchor} open={Boolean(anchor)} onClose={() => setAnchor(null)} slotProps={{ paper: { sx: { mt: 1, minWidth: 190, borderRadius: 3, boxShadow: "0 18px 50px rgba(0,0,0,.16)" } } }}>
-        {languages.map((language) => (
-          <MenuItem key={language.code} selected={locale === language.code} onClick={() => { setLocale(language.code); setAnchor(null); }} sx={{ gap: 1.5, py: 1.25, fontWeight: 800 }}>
-            <span aria-hidden="true">{language.flag}</span><span>{language.name}</span><span className="ml-auto text-[10px] text-gray-400">{language.short}</span>
-          </MenuItem>
-        ))}
-      </Menu>
-    </>
+      {open && <>
+        <button type="button" aria-label="Close" className="fixed inset-0 z-40 cursor-default" onClick={() => setOpen(false)} />
+        <div role="listbox" className="absolute right-0 top-full z-50 mt-2 min-w-48 rounded-2xl border border-white/60 bg-white/90 p-1.5 shadow-2xl backdrop-blur-2xl">
+          {languages.map((item) => <button key={item.code} role="option" aria-selected={locale === item.code} onClick={() => { setLocale(item.code); setOpen(false); }}
+            className={`flex w-full items-center justify-between rounded-xl px-4 py-3 text-sm font-bold ${locale === item.code ? "bg-isoko-light text-isoko-dark" : "text-gray-600 hover:bg-gray-50"}`}>
+            {item.name}<span className="text-xs text-gray-400">{item.short}</span>
+          </button>)}
+        </div>
+      </>}
+    </div>
   );
 }
