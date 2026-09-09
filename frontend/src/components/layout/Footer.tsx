@@ -23,7 +23,7 @@ export default function Footer() {
           <div>
             <h3 className="mb-5 text-sm font-bold uppercase tracking-[.15em] text-isoko-gold">{t("footer.links")}</h3>
             <ul className="space-y-3 text-[15px] text-white/62">
-              {[["nav.home","/"],["nav.videos","/videos"],["nav.blog","/blog"],["nav.library","/books"],["nav.about","/about"],["nav.contact","/contact"]].map(([key,href]) => <li key={key}><Link href={href} className="transition hover:text-white">{t(key as Parameters<typeof t>[0])}</Link></li>)}
+              {[["nav.home","/"],["nav.videos","/videos"],["nav.blog","/blog"],["nav.library","/books"],["nav.about","/about"],["nav.contact","/contact"],["nav.account","/account"]].map(([key,href]) => <li key={key}><Link href={href} className="transition hover:text-white">{t(key as Parameters<typeof t>[0])}</Link></li>)}
             </ul>
           </div>
           <div>
