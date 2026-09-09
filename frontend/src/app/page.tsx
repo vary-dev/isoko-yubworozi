@@ -7,6 +7,7 @@ import BooksPreview from "@/components/home/BooksPreview";
 import Footer from "@/components/layout/Footer";
 import BrandStory from "@/components/home/BrandStory";
 import YouTubeCta from "@/components/home/YouTubeCta";
+import MarketplacePreview from "@/components/home/MarketplacePreview";
 
 export default function Home() {
   return (
@@ -20,6 +21,7 @@ export default function Home() {
       <BooksPreview />
 
       <YouTubeCta />
+      <MarketplacePreview />
 
       <Footer />
     </main>
