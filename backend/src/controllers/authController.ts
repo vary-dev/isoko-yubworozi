@@ -4,7 +4,8 @@ import jwt from 'jsonwebtoken';
 import User from '../models/User';
 
 const generateToken = (id: string, role: string) => {
-  return jwt.sign({ id, role }, process.env.JWT_SECRET || 'mysecretkey2026', {
+  if (!process.env.JWT_SECRET) throw new Error('JWT_SECRET is required');
+  return jwt.sign({ id, role }, process.env.JWT_SECRET, {
     expiresIn: '7d',
   });
 };
@@ -15,9 +16,15 @@ const generateToken = (id: string, role: string) => {
  */
 export const register = async (req: Request, res: Response) => {
   try {
-    const { name, email, password, role } = req.body;
+    const { name, email, password } = req.body;
 
-    const userExists = await User.findOne({ email });
+    if (!name?.trim() || !email?.trim() || typeof password !== 'string' || password.length < 6) {
+      return res.status(400).json({ message: 'Name, email and a password of at least 6 characters are required' });
+    }
+
+    const normalizedEmail = email.trim().toLowerCase();
+
+    const userExists = await User.findOne({ email: normalizedEmail });
     if (userExists) {
       return res.status(400).json({ message: 'User already exists' });
     }
@@ -26,10 +33,10 @@ export const register = async (req: Request, res: Response) => {
     const hashedPassword = await bcrypt.hash(password, salt);
 
     const user = await User.create({
-      name,
-      email,
+      name: name.trim(),
+      email: normalizedEmail,
       password: hashedPassword,
-      role: role || 'user',
+      role: 'user',
     });
 
     const token = generateToken(user._id.toString(), user.role);
@@ -54,7 +61,11 @@ export const login = async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body;
 
-    const user = await User.findOne({ email });
+    if (!email?.trim() || typeof password !== 'string') {
+      return res.status(400).json({ message: 'Email and password are required' });
+    }
+
+    const user = await User.findOne({ email: email.trim().toLowerCase() });
     if (!user) {
       return res.status(401).json({ message: 'Invalid email or password' });
     }
