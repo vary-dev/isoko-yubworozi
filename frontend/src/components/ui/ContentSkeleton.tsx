@@ -1,16 +1,15 @@
 "use client";
-
-import Skeleton from "@mui/material/Skeleton";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function ContentSkeleton({ count = 6, variant = "card" }: { count?: number; variant?: "card" | "book" }) {
   return (
-    <div role="status" aria-label="Loading content" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div role="status" aria-label="Loading content" className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
       {Array.from({ length: count }).map((_, index) => (
-        <div key={index} className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
-          <Skeleton animation="wave" variant="rounded" height={variant === "book" ? 190 : 210} sx={{ borderRadius: 3 }} />
-          <Skeleton animation="wave" width="32%" height={24} sx={{ mt: 1 }} />
-          <Skeleton animation="wave" width="90%" height={30} />
-          <Skeleton animation="wave" width="65%" />
+        <div key={index} className="rounded-[1.75rem] border border-gray-100 bg-white p-4 shadow-sm">
+          <Skeleton className={variant === "book" ? "h-64 bg-isoko-dark/8" : "h-52 bg-isoko-dark/8"} />
+          <Skeleton className="mt-5 h-3 w-1/3 bg-isoko-dark/8" />
+          <Skeleton className="mt-3 h-6 w-11/12 bg-isoko-dark/8" />
+          <Skeleton className="mt-3 h-4 w-2/3 bg-isoko-dark/8" />
         </div>
       ))}
       <span className="sr-only">Loading…</span>
