@@ -5,6 +5,7 @@ import { fetchVideos } from "@/lib/api";
 import Link from "next/link";
 import ContentSkeleton from "@/components/ui/ContentSkeleton";
 import { useI18n } from "@/lib/i18n";
+import Image from "next/image";
 
 interface Video {
   _id: string;
@@ -71,12 +72,12 @@ export default function VideoGallery() {
               >
                 <div className="relative aspect-video rounded-xl overflow-hidden bg-gray-100 shadow-sm">
                   {video.thumbnail ? (
-                    <img
+                    <Image fill sizes="(max-width: 768px) 100vw, 33vw"
                       src={video.thumbnail}
                       alt={video.title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      className="object-cover group-hover:scale-105 transition-transform duration-500"
                       onError={(e) => {
-                        (e.target as HTMLImageElement).style.display = "none";
+                        e.currentTarget.style.display = "none";
                       }}
                     />
                   ) : (
