@@ -67,6 +67,15 @@ export default function Navbar() {
         <div className="flex items-center gap-3">
           <LanguageSwitcher isScrolled={isScrolled} />
 
+          <Link
+            href="/account"
+            aria-label={t("nav.account")}
+            title={t("nav.account")}
+            className={`grid h-10 w-10 place-items-center rounded-xl border transition hover:-translate-y-0.5 hover:border-isoko-accent hover:text-isoko-accent ${isScrolled ? "border-black/10 bg-white text-isoko-dark" : "border-white/20 bg-white/10 text-white backdrop-blur-xl"}`}
+          >
+            <i aria-hidden="true" className="fa-regular fa-user" />
+          </Link>
+
           <a
             href="https://youtube.com/@Isokoyubworozi"
             target="_blank"
@@ -148,6 +157,9 @@ export default function Navbar() {
                 ))}
               </div>
               <div className="p-6 border-t border-gray-100">
+                <Link href="/account" onClick={() => setMobileOpen(false)} className="mb-3 flex items-center justify-center gap-2 rounded-lg border border-isoko-dark/10 py-3 text-xs font-black uppercase tracking-wider text-isoko-dark">
+                  <i className="fa-regular fa-user" />{t("nav.account")}
+                </Link>
                 <a
                   href="https://youtube.com/@Isokoyubworozi"
                   target="_blank"
