@@ -34,7 +34,7 @@ export default function VideoAdmin() {
     }
   };
 
-  useEffect(() => { fetchVideos(); }, []);
+  useEffect(() => { const timer = window.setTimeout(() => void fetchVideos(), 0); return () => window.clearTimeout(timer); }, []);
 
   const resetForm = () => {
     setFormData({ title: '', youtubeUrl: '', category: 'Poultry' });
@@ -60,7 +60,8 @@ export default function VideoAdmin() {
       }
       resetForm();
       fetchVideos();
-    } catch (err: any) {
+    } catch (requestError: unknown) {
+      const err = requestError as { response?: { data?: { message?: string } } };
       alert(err.response?.data?.message || "Error saving video.");
     } finally {
       setLoading(false);
@@ -83,7 +84,7 @@ export default function VideoAdmin() {
       await deleteVideo(id);
       alert("Video deleted.");
       fetchVideos();
-    } catch (err) {
+    } catch {
       alert("Failed to delete video.");
     }
   };

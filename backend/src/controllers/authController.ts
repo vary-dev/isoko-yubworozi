@@ -10,6 +10,14 @@ const generateToken = (id: string, role: string) => {
   });
 };
 
+const publicUser = (user: any) => ({
+  _id: user._id,
+  name: user.name,
+  email: user.email,
+  role: user.role,
+  token: generateToken(user._id.toString(), user.role),
+});
+
 /**
  * @desc    Register a new user
  * @route   POST /api/auth/register
@@ -39,15 +47,7 @@ export const register = async (req: Request, res: Response) => {
       role: 'user',
     });
 
-    const token = generateToken(user._id.toString(), user.role);
-
-    res.status(201).json({
-      _id: user._id,
-      name: user.name,
-      email: user.email,
-      role: user.role,
-      token,
-    });
+    res.status(201).json(publicUser(user));
   } catch (error) {
     res.status(500).json({ message: 'Error registering user', error });
   }
@@ -75,15 +75,39 @@ export const login = async (req: Request, res: Response) => {
       return res.status(401).json({ message: 'Invalid email or password' });
     }
 
-    const token = generateToken(user._id.toString(), user.role);
+    res.json(publicUser(user));
+  } catch (error) {
+    res.status(500).json({ message: 'Error logging in', error });
+  }
+};
 
-    res.json({
-      _id: user._id,
-      name: user.name,
-      email: user.email,
-      role: user.role,
-      token,
-    });
+export const registerAdmin = async (req: Request, res: Response) => {
+  try {
+    const setupKey = req.header('x-admin-setup-key');
+    if (!process.env.ADMIN_SETUP_KEY || setupKey !== process.env.ADMIN_SETUP_KEY) {
+      return res.status(403).json({ message: 'Invalid administrator setup key' });
+    }
+    const { name, email, password } = req.body;
+    if (!name?.trim() || !email?.trim() || typeof password !== 'string' || password.length < 10) {
+      return res.status(400).json({ message: 'Name, email and a password of at least 10 characters are required' });
+    }
+    const normalizedEmail = email.trim().toLowerCase();
+    if (await User.exists({ email: normalizedEmail })) return res.status(400).json({ message: 'User already exists' });
+    const passwordHash = await bcrypt.hash(password, 12);
+    const user = await User.create({ name: name.trim(), email: normalizedEmail, password: passwordHash, role: 'admin' });
+    res.status(201).json(publicUser(user));
+  } catch (error) {
+    res.status(500).json({ message: 'Error creating administrator', error });
+  }
+};
+
+export const loginAdmin = async (req: Request, res: Response) => {
+  try {
+    const { email, password } = req.body;
+    if (!email?.trim() || typeof password !== 'string') return res.status(400).json({ message: 'Email and password are required' });
+    const user = await User.findOne({ email: email.trim().toLowerCase(), role: 'admin' });
+    if (!user || !(await bcrypt.compare(password, user.password))) return res.status(401).json({ message: 'Invalid administrator credentials' });
+    res.json(publicUser(user));
   } catch (error) {
     res.status(500).json({ message: 'Error logging in', error });
   }

@@ -13,8 +13,9 @@ export const protect = (req: AuthRequest, res: Response, next: NextFunction) => 
       return res.status(401).json({ message: 'Not authorized, no token provided' });
     }
 
+    if (!process.env.JWT_SECRET) return res.status(500).json({ message: 'Authentication is not configured' });
     const token = authHeader.split(' ')[1]!;
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'mysecretkey2026') as { id: string; role: string };
+    const decoded = jwt.verify(token, process.env.JWT_SECRET) as { id: string; role: string };
 
     req.user = { id: decoded.id, role: decoded.role };
     next();

@@ -1,51 +1,7 @@
 "use client";
-export default function Analytics() {
-  return (
-    <div className="space-y-8">
-      <div>
-        <h2 className="text-3xl font-black text-isoko-dark">Platform Analytics</h2>
-        <p className="text-sm text-gray-400 mt-1">Track your platform performance and growth metrics</p>
-      </div>
-
-      <div className="grid md:grid-cols-3 gap-6">
-        <div className="p-8 bg-gradient-to-br from-isoko-primary to-isoko-dark text-white rounded-[2rem]">
-           <p className="text-[10px] font-black uppercase opacity-60 tracking-widest">Total Revenue</p>
-           <h3 className="text-4xl font-black mt-2">1,240,000 <span className="text-lg opacity-60">RWF</span></h3>
-           <div className="mt-6 flex items-center gap-2 text-xs font-bold text-isoko-accent">
-              <i className="fa-solid fa-arrow-trend-up"></i> +12.5% vs last month
-           </div>
-        </div>
-        <div className="p-8 bg-white border border-gray-100 rounded-[2rem] shadow-sm">
-           <p className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Premium Subscribers</p>
-           <h3 className="text-4xl font-black mt-2 text-isoko-dark">482</h3>
-           <div className="mt-6 flex items-center gap-2 text-xs font-bold text-green-500">
-              <i className="fa-solid fa-arrow-up"></i> +24 this week
-           </div>
-        </div>
-        <div className="p-8 bg-white border border-gray-100 rounded-[2rem] shadow-sm">
-           <p className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Total Book Downloads</p>
-           <h3 className="text-4xl font-black mt-2 text-isoko-dark">3,120</h3>
-           <div className="mt-6 flex items-center gap-2 text-xs font-bold text-green-500">
-              <i className="fa-solid fa-arrow-up"></i> +156 this month
-           </div>
-        </div>
-      </div>
-
-      {/* Subscription List */}
-      <div className="bg-white rounded-[2rem] p-8 border border-gray-100 shadow-sm">
-        <h4 className="font-black text-isoko-dark uppercase text-sm tracking-widest mb-6">Recent Premium Access Tokens</h4>
-        <div className="space-y-3">
-          {[1,2,3,4,5].map(i => (
-            <div key={i} className="flex justify-between items-center p-4 bg-gray-50 rounded-2xl border-l-4 border-isoko-accent">
-               <div>
-                  <p className="font-bold text-sm">Farmer_{i*123}@gmail.com</p>
-                  <p className="text-[10px] text-gray-400 font-bold uppercase mt-1">Purchased: Poultry Masterclass</p>
-               </div>
-               <span className="text-[10px] font-black text-isoko-primary bg-isoko-light px-3 py-1 rounded-lg">RW-TXN-9021{i}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
+import { useEffect, useMemo, useState } from 'react';
+import { FiBarChart2, FiBookOpen, FiEdit3, FiPlayCircle } from 'react-icons/fi';
+import AdminPageHeader from '@/components/ui/AdminPageHeader';
+import { getRecentActivity, getStats } from '@/lib/api';
+interface Stats{books:number;articles:number;videos:number} interface Activity{type:string;title:string;createdAt:string}
+export default function Analytics(){const[stats,setStats]=useState<Stats>({books:0,articles:0,videos:0});const[activity,setActivity]=useState<Activity[]>([]);const[loading,setLoading]=useState(true);useEffect(()=>{Promise.all([getStats(),getRecentActivity()]).then(([s,a])=>{setStats(s.data);setActivity(a.data)}).finally(()=>setLoading(false))},[]);const total=stats.books+stats.articles+stats.videos;const cards=[{label:'Books',value:stats.books,icon:FiBookOpen},{label:'Articles',value:stats.articles,icon:FiEdit3},{label:'Videos',value:stats.videos,icon:FiPlayCircle}];const latest=useMemo(()=>activity.slice(0,8),[activity]);return <div className="space-y-8"><AdminPageHeader eyebrow="Insights" title="Content analytics" description="A factual view of what is currently published. Audience, payment and revenue metrics will appear only after those backend events are implemented."/><div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4"><article className="rounded-3xl bg-forest p-6 text-white"><FiBarChart2 className="text-lime"/><p className="mt-8 text-xs font-bold text-white/55">All published resources</p><p className="mt-1 text-4xl font-semibold">{loading?'—':total}</p></article>{cards.map(card=><article key={card.label} className="surface rounded-3xl p-6"><card.icon className="text-leaf"/><p className="mt-8 text-xs font-bold text-slate">{card.label}</p><p className="mt-1 text-4xl font-semibold">{loading?'—':card.value}</p><div className="mt-4 h-1.5 overflow-hidden rounded-full bg-mist"><div className="h-full rounded-full bg-leaf" style={{width:`${total?Math.max(8,card.value/total*100):0}%`}}/></div></article>)}</div><section className="surface rounded-3xl p-6 sm:p-8"><h2 className="text-lg font-semibold">Recent publishing activity</h2><p className="mt-1 text-xs text-slate">Latest resources ordered by their recorded creation date.</p><div className="mt-6 divide-y divide-ink/5">{latest.map((item,index)=><div key={`${item.title}-${index}`} className="flex items-center justify-between gap-4 py-4"><div><p className="text-sm font-bold">{item.title}</p><p className="mt-1 text-[10px] font-extrabold uppercase tracking-wider text-leaf">{item.type}</p></div><time className="text-xs text-slate">{new Date(item.createdAt).toLocaleDateString()}</time></div>)}{!loading&&!latest.length&&<p className="py-10 text-center text-sm text-slate">No publishing activity yet.</p>}</div></section></div>}

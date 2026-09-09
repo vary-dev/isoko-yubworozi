@@ -1,23 +1,36 @@
 import { Request, Response } from 'express';
 import Book from '../models/Book';
 
+const isHttpsUrl = (value: unknown) => {
+  try { return new URL(String(value)).protocol === 'https:'; } catch { return false; }
+};
+
+const publicBook = (book: any) => {
+  const value = book.toObject();
+  if (value.isPremium) delete value.fileUrl;
+  return value;
+};
+
 /**
  * @desc    Create a new book (Admin Only)
  * @route   POST /api/books
  */
 export const createBook = async (req: Request, res: Response) => {
   try {
-    const { title, description, category, price, isPremium } = req.body;
+    const { title, description, category, price, isPremium, coverImageUrl } = req.body;
+    if (!title?.trim() || !description?.trim() || !category?.trim()) {
+      return res.status(400).json({ message: 'Title, description and category are required' });
+    }
     
     // Explicitly type the files object for TypeScript
     const files = req.files as { [fieldname: string]: Express.Multer.File[] };
     
     // Extract paths from the uploaded files provided by Multer/Cloudinary
-    const coverImagePath = files?.['coverImage']?.[0]?.path || '';
+    const coverImagePath = files?.['coverImage']?.[0]?.path || (isHttpsUrl(coverImageUrl) ? coverImageUrl : '');
     const fileUrlPath = files?.['fileUrl']?.[0]?.path || '';
 
     if (!coverImagePath || !fileUrlPath) {
-       return res.status(400).json({ message: 'Both cover image and PDF file are required' });
+       return res.status(400).json({ message: 'A cover image (upload or library selection) and PDF file are required' });
     }
 
     const newBook = new Book({
@@ -45,7 +58,7 @@ export const createBook = async (req: Request, res: Response) => {
 export const getBooks = async (_req: Request, res: Response) => {
   try {
     const books = await Book.find().sort({ createdAt: -1 });
-    res.status(200).json(books);
+    res.status(200).json(books.map(publicBook));
   } catch (error) {
     res.status(500).json({ message: 'Error fetching books', error });
   }
@@ -59,7 +72,7 @@ export const getBookById = async (req: Request, res: Response) => {
   try {
     const book = await Book.findById(req.params.id);
     if (!book) return res.status(404).json({ message: 'Book not found' });
-    res.status(200).json(book);
+    res.status(200).json(publicBook(book));
   } catch (error) {
     res.status(500).json({ message: 'Error fetching book', error });
   }
@@ -85,7 +98,7 @@ export const deleteBook = async (req: Request, res: Response) => {
  */
 export const updateBook = async (req: Request, res: Response) => {
   try {
-    const { title, description, category, price, isPremium } = req.body;
+    const { title, description, category, price, isPremium, coverImageUrl } = req.body;
     const files = req.files as { [fieldname: string]: Express.Multer.File[] };
 
     const updateData: Record<string, any> = {
@@ -99,6 +112,9 @@ export const updateBook = async (req: Request, res: Response) => {
     // If new files were uploaded, update their paths
     if (files?.['coverImage']?.[0]?.path) {
       updateData.coverImage = files['coverImage'][0].path;
+    } else if (coverImageUrl) {
+      if (!isHttpsUrl(coverImageUrl)) return res.status(400).json({ message: 'Cover image URL must use HTTPS' });
+      updateData.coverImage = coverImageUrl;
     }
     if (files?.['fileUrl']?.[0]?.path) {
       updateData.fileUrl = files['fileUrl'][0].path;
@@ -109,5 +125,13 @@ export const updateBook = async (req: Request, res: Response) => {
     res.status(200).json(book);
   } catch (error) {
     res.status(500).json({ message: 'Error updating book', error });
+  }
+};
+
+export const getAdminBooks = async (_req: Request, res: Response) => {
+  try {
+    res.status(200).json(await Book.find().sort({ createdAt: -1 }));
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching admin library', error });
   }
 };

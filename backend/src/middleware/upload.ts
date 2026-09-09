@@ -30,7 +30,14 @@ const combinedStorage = new CloudinaryStorage({
   },
 });
 
-export const uploadCombined = multer({ storage: combinedStorage });
+const fileFilter: multer.Options['fileFilter'] = (_req, file, callback) => {
+  const isDocument = ['fileUrl', 'document', 'pdf'].includes(file.fieldname);
+  const allowed = isDocument ? file.mimetype === 'application/pdf' : file.mimetype.startsWith('image/');
+  if (!allowed) return callback(new Error(isDocument ? 'Only PDF documents are accepted' : 'Only image files are accepted'));
+  callback(null, true);
+};
+
+export const uploadCombined = multer({ storage: combinedStorage, fileFilter, limits: { fileSize: 25 * 1024 * 1024, files: 2 } });
 
 // Keep the original single-purpose exports for backward compatibility
 const imageStorage = new CloudinaryStorage({
@@ -44,4 +51,4 @@ const imageStorage = new CloudinaryStorage({
   } as any,
 });
 
-export const uploadImage = multer({ storage: imageStorage });
+export const uploadImage = multer({ storage: imageStorage, fileFilter, limits: { fileSize: 8 * 1024 * 1024, files: 1 } });

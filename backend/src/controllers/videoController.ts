@@ -1,11 +1,25 @@
 import { Request, Response } from 'express';
 import Video from '../models/Video';
 
+const getYouTubeId = (value: string) => {
+  try {
+    const url = new URL(value);
+    if (url.hostname === 'youtu.be') return url.pathname.slice(1).split('/')[0];
+    if (['youtube.com', 'www.youtube.com', 'm.youtube.com'].includes(url.hostname)) {
+      if (url.pathname === '/watch') return url.searchParams.get('v');
+      const match = url.pathname.match(/^\/(?:embed|shorts)\/([^/]+)/);
+      return match?.[1] || null;
+    }
+  } catch { return null; }
+  return null;
+};
+
 export const addVideo = async (req: Request, res: Response) => {
   try {
     const { title, youtubeUrl, category } = req.body;
-    // Simple logic to extract YouTube ID for thumbnail
-    const videoId = youtubeUrl.split('v=')[1]?.split('&')[0] || youtubeUrl.split('/').pop();
+    if (!title?.trim() || !category?.trim()) return res.status(400).json({ message: 'Title and category are required' });
+    const videoId = getYouTubeId(youtubeUrl);
+    if (!videoId) return res.status(400).json({ message: 'Enter a valid YouTube video URL' });
     const thumbnail = `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
 
     const newVideo = new Video({ title, youtubeUrl, thumbnail, category });
@@ -43,7 +57,8 @@ export const updateVideo = async (req: Request, res: Response) => {
     // If the YouTube URL changed, re-extract thumbnail
     if (youtubeUrl) {
       updateData.youtubeUrl = youtubeUrl;
-      const videoId = youtubeUrl.split('v=')[1]?.split('&')[0] || youtubeUrl.split('/').pop();
+      const videoId = getYouTubeId(youtubeUrl);
+      if (!videoId) return res.status(400).json({ message: 'Enter a valid YouTube video URL' });
       updateData.thumbnail = `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
     }
 
