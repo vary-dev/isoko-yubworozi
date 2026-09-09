@@ -1,18 +1,18 @@
-import { Plus_Jakarta_Sans, Inter } from "next/font/google";
+import { Manrope, Sora } from "next/font/google";
 import "./globals.css";
 import type { Metadata, Viewport } from "next";
 import Script from "next/script";
 import Providers from "@/components/Providers";
 
-const jakarta = Plus_Jakarta_Sans({
+const sora = Sora({
   subsets: ["latin"],
-  variable: "--font-jakarta",
+  variable: "--font-display",
   display: "swap",
 });
 
-const inter = Inter({
+const manrope = Manrope({
   subsets: ["latin"],
-  variable: "--font-inter",
+  variable: "--font-sans",
   display: "swap",
 });
 
@@ -57,7 +57,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="rw" className={`${jakarta.variable} ${inter.variable}`} suppressHydrationWarning>
+    <html lang="rw" className={`${sora.variable} ${manrope.variable}`} suppressHydrationWarning>
       <head>
         <link
           rel="stylesheet"
