@@ -5,6 +5,7 @@ import { fetchBooks } from "@/lib/api";
 import Link from "next/link";
 import ContentSkeleton from "@/components/ui/ContentSkeleton";
 import { useI18n } from "@/lib/i18n";
+import Image from "next/image";
 
 interface Book {
   _id: string;
@@ -70,10 +71,10 @@ export default function BooksPreview() {
               >
                 <div className="aspect-[3/4] rounded-xl overflow-hidden bg-gray-100 shadow-sm mb-3 relative">
                   {book.coverImage ? (
-                    <img
+                    <Image fill sizes="(max-width: 640px) 50vw, 25vw"
                       src={book.coverImage}
                       alt={book.title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      className="object-cover group-hover:scale-105 transition-transform duration-500"
                     />
                   ) : (
                     <div className="w-full h-full bg-gradient-to-br from-isoko-light to-gray-100 flex items-center justify-center">

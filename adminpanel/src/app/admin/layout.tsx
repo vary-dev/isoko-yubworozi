@@ -4,30 +4,30 @@ import AuthGuard from "@/components/layout/AuthGuard";
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   return (
     <AuthGuard>
-      <div className="min-h-screen bg-[#F9FBF9]">
+      <div className="min-h-screen bg-mist">
         <AdminSidebar />
         
         {/* Main Content Area: Responsive Margin */}
         <div className="lg:ml-72 min-h-screen">
           {/* Top Header */}
-          <header className="h-20 bg-white/80 backdrop-blur-md border-b border-gray-100 flex items-center justify-between px-6 lg:px-12 sticky top-0 z-40">
+          <header className="sticky top-0 z-40 flex h-20 items-center justify-between border-b border-ink/5 bg-white/80 px-6 backdrop-blur-xl lg:px-10">
             <div className="hidden lg:block">
-               <span className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Isoko y&apos;Ubworozi</span>
-               <h2 className="text-isoko-dark font-black uppercase tracking-tight">Management Console</h2>
+               <span className="text-[10px] font-extrabold uppercase text-leaf tracking-[.18em]">Isoko y&apos;Ubworozi</span>
+               <h2 className="font-display text-sm font-semibold">Publishing command centre</h2>
             </div>
             
             {/* Right Section */}
             <div className="flex items-center gap-6 ml-auto lg:ml-0">
-              <div className="flex items-center gap-3 bg-isoko-light/50 px-4 py-2 rounded-full border border-isoko-light">
-                <div className="w-2 h-2 bg-isoko-accent rounded-full animate-pulse"></div>
-                <span className="text-[10px] font-black text-isoko-primary uppercase hidden sm:block">API Online</span>
+              <div className="flex items-center gap-3 rounded-full border border-leaf/10 bg-leaf/5 px-4 py-2">
+                <div className="h-2 w-2 rounded-full bg-leaf"></div>
+                <span className="hidden text-[10px] font-extrabold uppercase text-forest sm:block">Verified session</span>
               </div>
-              <div className="w-10 h-10 bg-isoko-dark rounded-xl flex items-center justify-center text-white text-xs font-black shadow-lg">AD</div>
+              <div className="grid h-10 w-10 place-items-center rounded-xl bg-forest text-xs font-extrabold text-white">AD</div>
             </div>
           </header>
 
           {/* Dynamic Page Content */}
-          <main className="p-6 lg:p-12">
+          <main className="p-5 sm:p-7 lg:p-10">
             {children}
           </main>
         </div>

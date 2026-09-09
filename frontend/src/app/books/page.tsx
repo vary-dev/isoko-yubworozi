@@ -7,6 +7,8 @@ import Footer from "@/components/layout/Footer";
 import PageHero from "@/components/ui/PageHero";
 import ContentSkeleton from "@/components/ui/ContentSkeleton";
 import { useI18n } from "@/lib/i18n";
+import Link from "next/link";
+import Image from "next/image";
 
 interface Book {
   _id: string;
@@ -42,10 +44,19 @@ export default function BooksPage() {
     filter === "All" ? books : books.filter((b) => b.category === filter);
 
   return (
-    <main>
+    <main id="main-content">
       <Navbar />
 
       <PageHero eyebrow={t("library.eyebrow")} title={t("library.title")} body={t("library.body")} icon="fa-solid fa-book-open" image="https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?q=80&w=1800&auto=format&fit=crop" />
+
+      <section className="bg-white py-16" aria-labelledby="library-access-title">
+        <div className="section-shell">
+          <div className="max-w-2xl"><p className="mb-3 text-sm font-extrabold uppercase tracking-[.17em] text-isoko-accent">{t("library.howEyebrow")}</p><h2 id="library-access-title" className="text-3xl font-bold text-isoko-dark text-balance sm:text-4xl">{t("library.howTitle")}</h2><p className="mt-4 text-base leading-7 text-slate-600">{t("library.howBody")}</p></div>
+          <div className="mt-9 grid gap-5 md:grid-cols-3">
+            {[["fa-book-open","library.freeTitle","library.freeBody"],["fa-crown","library.premiumTitle","library.premiumBody"],["fa-user-shield","library.accountTitle","library.accountBody"]].map(([icon,title,body]) => <article key={title} className="rounded-3xl border border-isoko-dark/8 bg-[#f5faf6] p-6"><span className="grid h-12 w-12 place-items-center rounded-2xl bg-isoko-dark text-isoko-gold"><i className={`fa-solid ${icon}`} /></span><h3 className="mt-5 text-xl font-bold text-isoko-dark">{t(title as Parameters<typeof t>[0])}</h3><p className="mt-3 text-base leading-7 text-slate-600">{t(body as Parameters<typeof t>[0])}</p>{title === "library.accountTitle" && <Link href="/account" className="mt-5 inline-flex items-center gap-2 text-sm font-extrabold text-isoko-primary">{t("library.createAccount")}<i className="fa-solid fa-arrow-right text-xs" /></Link>}</article>)}
+          </div>
+        </div>
+      </section>
 
       {/* Content */}
       <section className="py-16 bg-gray-50/60 min-h-[60vh]">
@@ -88,10 +99,10 @@ export default function BooksPage() {
                     {/* Cover */}
                     <div className="w-28 h-40 rounded-lg overflow-hidden bg-gray-100 shrink-0 shadow-sm">
                       {book.coverImage ? (
-                        <img
+                        <Image fill sizes="112px"
                           src={book.coverImage}
                           alt={book.title}
-                          className="w-full h-full object-cover"
+                          className="object-cover"
                         />
                       ) : (
                         <div className="w-full h-full bg-gradient-to-br from-isoko-light to-gray-100 flex items-center justify-center">
@@ -119,7 +130,7 @@ export default function BooksPage() {
                         {book.description}
                       </p>
                       <div className="flex items-center gap-3">
-                        {book.fileUrl ? (
+                        {book.fileUrl && !book.isPremium ? (
                           <a
                             href={book.fileUrl}
                             target="_blank"
@@ -127,10 +138,10 @@ export default function BooksPage() {
                             className="inline-flex items-center gap-2 bg-isoko-accent text-white px-4 py-2 rounded-lg text-[11px] font-black uppercase tracking-wider hover:bg-isoko-primary transition-all"
                           >
                             <i className="fa-solid fa-download text-[10px]"></i>
-                            {book.price > 0
-                              ? `${book.price.toLocaleString()} RWF`
-                              : t("library.download")}
+                            {t("library.download")}
                           </a>
+                        ) : book.isPremium ? (
+                          <Link href="/account?next=/books" className="inline-flex items-center gap-2 rounded-lg bg-isoko-dark px-4 py-2 text-[11px] font-black uppercase tracking-wider text-white transition hover:bg-isoko-primary"><i className="fa-solid fa-lock text-[10px]" />{book.price.toLocaleString()} RWF</Link>
                         ) : (
                           <span className="text-xs text-gray-400 font-medium italic">
                             {t("library.soon")}
@@ -152,7 +163,7 @@ export default function BooksPage() {
               </div>
               <p className="text-gray-400 font-bold text-sm">
                 {filter !== "All"
-                  ? `No books found in "${filter}" category.`
+                  ? t("library.noCategory")
                   : t("library.empty")}
               </p>
             </div>

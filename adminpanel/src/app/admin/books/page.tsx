@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { getBooks, uploadBook, updateBook, deleteBook } from '@/lib/api';
 import { motion, AnimatePresence } from 'framer-motion';
+import MediaPicker, { MediaAsset } from '@/components/media/MediaPicker';
 
 interface Book {
   _id: string;
@@ -24,6 +25,8 @@ export default function BookAdmin() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState(emptyForm);
   const [files, setFiles] = useState<{ coverImage: File | null; fileUrl: File | null }>({ coverImage: null, fileUrl: null });
+  const [coverImageUrl, setCoverImageUrl] = useState('');
+  const [pickerOpen, setPickerOpen] = useState(false);
 
   const fetchBooks = async () => {
     try {
@@ -36,12 +39,13 @@ export default function BookAdmin() {
     }
   };
 
-  useEffect(() => { fetchBooks(); }, []);
+  useEffect(() => { const timer = window.setTimeout(() => void fetchBooks(), 0); return () => window.clearTimeout(timer); }, []);
 
   const resetForm = () => {
     setFormData(emptyForm);
     setFiles({ coverImage: null, fileUrl: null });
     setEditingId(null);
+    setCoverImageUrl('');
   };
 
   const handleUpload = async (e: React.FormEvent) => {
@@ -60,6 +64,7 @@ export default function BookAdmin() {
     data.append('price', String(formData.price));
     data.append('isPremium', String(formData.isPremium));
     if (files.coverImage) data.append('coverImage', files.coverImage);
+    if (coverImageUrl) data.append('coverImageUrl', coverImageUrl);
     if (files.fileUrl) data.append('fileUrl', files.fileUrl);
 
     try {
@@ -67,8 +72,8 @@ export default function BookAdmin() {
         await updateBook(editingId, data);
         alert("Book updated successfully!");
       } else {
-        if (!files.coverImage || !files.fileUrl) {
-          alert("Both cover image and PDF file are required for new books.");
+        if ((!files.coverImage && !coverImageUrl) || !files.fileUrl) {
+          alert("Choose a cover image and PDF file for the new book.");
           setLoading(false);
           return;
         }
@@ -77,8 +82,8 @@ export default function BookAdmin() {
       }
       resetForm();
       fetchBooks();
-    } catch (err: any) {
-      console.error(err);
+    } catch (requestError: unknown) {
+      const err = requestError as { response?: { data?: { message?: string } } };
       alert(err.response?.data?.message || "Upload failed. Check console for details.");
     } finally {
       setLoading(false);
@@ -94,6 +99,7 @@ export default function BookAdmin() {
       isPremium: book.isPremium,
     });
     setEditingId(book._id);
+    setCoverImageUrl(book.coverImage);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -103,7 +109,7 @@ export default function BookAdmin() {
       await deleteBook(id);
       alert("Book deleted successfully.");
       fetchBooks();
-    } catch (err) {
+    } catch {
       alert("Failed to delete book.");
     }
   };
@@ -149,6 +155,8 @@ export default function BookAdmin() {
                 Cover Image {editingId ? '(leave empty to keep current)' : ''}
               </p>
               <input type="file" accept="image/*" className="text-xs" onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFiles({...files, coverImage: e.target.files?.[0] || null})} />
+              <button type="button" onClick={() => setPickerOpen(true)} className="mt-3 block w-full text-xs font-extrabold text-isoko-primary">Choose from media library</button>
+              {coverImageUrl && <img src={coverImageUrl} alt="Selected cover" className="mx-auto mt-3 h-24 w-20 rounded-lg object-cover" />}
             </div>
             <div className="border-2 border-dashed border-gray-200 p-6 rounded-2xl text-center hover:border-isoko-accent/50 transition">
               <i className="fa-solid fa-file-pdf text-2xl text-gray-300 mb-2"></i>
@@ -222,6 +230,7 @@ export default function BookAdmin() {
           </div>
         </div>
       )}
+      <MediaPicker open={pickerOpen} onClose={() => setPickerOpen(false)} onSelect={(asset: MediaAsset) => setCoverImageUrl(asset.url)} />
     </div>
   );
 }

@@ -1,12 +1,19 @@
 import { Request, Response } from 'express';
 import Article from '../models/Article';
 
+const isHttpsUrl = (value: unknown) => {
+  try { return new URL(String(value)).protocol === 'https:'; } catch { return false; }
+};
+
+const makeSlug = (title: string) => title.toLowerCase().trim().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
+
 export const createArticle = async (req: Request, res: Response) => {
   try {
-    const { title, content, category, author } = req.body;
-    const slug = title.toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, '');
-    
-    const image = req.file ? req.file.path : ''; // From Cloudinary
+    const { title, content, category, author, imageUrl } = req.body;
+    if (!title?.trim() || !content?.trim()) return res.status(400).json({ message: 'Title and content are required' });
+    const slug = makeSlug(title);
+    const image = req.file?.path || (isHttpsUrl(imageUrl) ? imageUrl : '');
+    if (!image) return res.status(400).json({ message: 'Upload an image or select one from the media library' });
 
     const newArticle = new Article({ title, slug, content, category, image, author });
     await newArticle.save();
@@ -37,17 +44,20 @@ export const getArticleById = async (req: Request, res: Response) => {
 
 export const updateArticle = async (req: Request, res: Response) => {
   try {
-    const { title, content, category, author } = req.body;
+    const { title, content, category, author, imageUrl } = req.body;
     const updateData: Record<string, any> = { content, category, author };
 
     if (title) {
       updateData.title = title;
-      updateData.slug = title.toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, '');
+      updateData.slug = makeSlug(title);
     }
 
     // If a new image was uploaded, update it
     if (req.file) {
       updateData.image = req.file.path;
+    } else if (imageUrl) {
+      if (!isHttpsUrl(imageUrl)) return res.status(400).json({ message: 'Media URL must use HTTPS' });
+      updateData.image = imageUrl;
     }
 
     const article = await Article.findByIdAndUpdate(req.params.id, updateData, { new: true });

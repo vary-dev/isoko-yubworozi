@@ -2,38 +2,34 @@
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { useI18n } from "@/lib/i18n";
+import { Card, CardContent, CardDescription, CardTitle } from "@/components/ui/card";
 
 const features = [
   { title: "guidance.videoTitle" as const, description: "guidance.videoBody" as const,
     icon: "fa-brands fa-youtube",
     link: "/videos",
-    gradient: "from-red-500 to-red-600",
-    iconBg: "bg-red-50 text-red-500",
   },
   {
     title: "guidance.articleTitle" as const, description: "guidance.articleBody" as const,
     icon: "fa-solid fa-newspaper",
     link: "/blog",
-    gradient: "from-isoko-primary to-isoko-dark",
-    iconBg: "bg-isoko-light text-isoko-primary",
   },
   {
     title: "guidance.bookTitle" as const, description: "guidance.bookBody" as const,
     icon: "fa-solid fa-book-open",
     link: "/books",
-    gradient: "from-blue-500 to-blue-600",
-    iconBg: "bg-blue-50 text-blue-500",
   },
 ];
 
 export default function Guidance() {
   const { t } = useI18n();
   return (
-    <section className="relative z-30 -mt-16 pb-4">
-      <div className="max-w-7xl mx-auto px-5 lg:px-8">
-        <div className="text-center mb-9 pt-24">
-          <p className="text-[11px] font-black uppercase tracking-[.2em] text-isoko-accent mb-2">{t("guidance.eyebrow")}</p>
-          <h2 className="text-3xl sm:text-4xl font-black text-isoko-dark text-balance">{t("guidance.title")}</h2>
+    <section className="relative overflow-hidden bg-isoko-dark py-24">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_10%_10%,rgba(76,159,56,.3),transparent_32%),radial-gradient(circle_at_90%_80%,rgba(244,185,66,.12),transparent_28%)]" />
+      <div className="section-shell relative">
+        <div className="mb-12 max-w-2xl">
+          <p className="mb-3 text-sm font-extrabold uppercase tracking-[.18em] text-isoko-gold">{t("guidance.eyebrow")}</p>
+          <h2 className="text-3xl font-bold text-white text-balance sm:text-5xl">{t("guidance.title")}</h2>
         </div>
         <div className="grid md:grid-cols-3 gap-5">
           {features.map((item, idx) => (
@@ -44,24 +40,21 @@ export default function Guidance() {
               transition={{ delay: idx * 0.12, duration: 0.5 }}
               viewport={{ once: true }}
             >
-              <Link
-                href={item.link}
-                className="block p-7 bg-white rounded-xl border border-gray-100 shadow-lg hover:shadow-xl transition-all group"
-              >
+              <Link href={item.link} className="group block h-full">
+                <Card className="h-full transition duration-300 hover:-translate-y-1.5 hover:border-white/30 hover:bg-white/15">
+                <CardContent className="p-7">
                 <div
-                  className={`w-12 h-12 rounded-lg flex items-center justify-center text-lg mb-5 ${item.iconBg} group-hover:scale-110 transition-transform`}
+                  className="mb-6 flex h-13 w-13 items-center justify-center rounded-2xl bg-white/12 text-xl text-isoko-gold transition-transform group-hover:scale-110"
                 >
                   <i className={item.icon}></i>
                 </div>
-                <h3 className="text-lg font-black text-isoko-dark mb-2">
-                  {t(item.title)}
-                </h3>
-                <p className="text-gray-500 text-sm leading-relaxed mb-4">
-                  {t(item.description)}
-                </p>
-                <span className="text-isoko-accent text-xs font-black uppercase tracking-wider flex items-center gap-2 group-hover:gap-3 transition-all">
+                <CardTitle className="mb-3 text-white">{t(item.title)}</CardTitle>
+                <CardDescription className="mb-6">{t(item.description)}</CardDescription>
+                <span className="flex items-center gap-2 text-sm font-extrabold text-isoko-gold transition-all group-hover:gap-3">
                   {t("common.explore")} <i className="fa-solid fa-arrow-right text-[10px]"></i>
                 </span>
+                </CardContent>
+                </Card>
               </Link>
             </motion.div>
           ))}

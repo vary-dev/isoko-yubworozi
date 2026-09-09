@@ -2,7 +2,7 @@ import type { MetadataRoute } from "next";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const base = process.env.NEXT_PUBLIC_SITE_URL || "https://isokoyubworozi.com";
-  return ["", "/videos", "/blog", "/books", "/about", "/contact"].map(
+  return ["", "/videos", "/blog", "/books", "/about", "/contact", "/privacy", "/terms"].map(
     (path, index) => ({
       url: `${base}${path}`,
       lastModified: new Date(),

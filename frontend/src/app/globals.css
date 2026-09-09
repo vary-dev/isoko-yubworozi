@@ -5,8 +5,10 @@
   --color-isoko-primary: #0B5D2A;
   --color-isoko-accent: #4C9F38;
   --color-isoko-light: #EAF4E3;
-  --font-jakarta: var(--font-jakarta);
-  --font-inter: var(--font-inter);
+  --color-isoko-gold: #F4B942;
+  --color-isoko-ink: #09281A;
+  --font-display: var(--font-display);
+  --font-sans: var(--font-sans);
 }
 
 :root {
@@ -24,8 +26,8 @@ html {
 }
 
 body {
-  font-family: var(--font-inter), system-ui, -apple-system, sans-serif;
-  background-color: #fff;
+  font-family: var(--font-sans), system-ui, -apple-system, sans-serif;
+  background: #f6faf7;
   color: #1a1a1a;
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
@@ -77,8 +79,9 @@ a, button, input, textarea, select {
 }
 
 h1, h2, h3, h4, h5, h6 {
-  font-family: var(--font-jakarta), system-ui, sans-serif;
+  font-family: var(--font-display), system-ui, sans-serif;
   line-height: 1.15;
+  letter-spacing: -.035em;
 }
 
 /* Navbar scroll transition */
@@ -86,45 +89,7 @@ h1, h2, h3, h4, h5, h6 {
   transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Google Translate widget cleanup */
-.goog-te-banner-frame {
-  display: none !important;
-}
-
-body {
-  top: 0 !important;
-}
-
-.goog-te-gadget {
-  font-family: var(--font-inter) !important;
-  font-size: 0 !important;
-}
-
-.goog-te-gadget .goog-te-combo {
-  font-family: var(--font-inter);
-  font-size: 12px;
-  font-weight: 700;
-  padding: 6px 10px;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 6px;
-  background: transparent;
-  color: white;
-  outline: none;
-  cursor: pointer;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.goog-te-gadget .goog-te-combo option {
-  color: #1a1a1a;
-  background: white;
-}
-
-.goog-te-gadget span {
-  display: none;
-}
-
-/* Skip translate top bar */
-.skiptranslate {
-  display: none !important;
-}
+.font-display { font-family: var(--font-display), system-ui, sans-serif; }
+.glass-card { border: 1px solid rgb(255 255 255 / .2); background: rgb(255 255 255 / .1); color: white; box-shadow: 0 24px 80px rgb(2 32 16 / .2); backdrop-filter: blur(22px); }
+.section-shell { width: min(100% - 2.5rem, 80rem); margin-inline: auto; }
+.text-balance { text-wrap: balance; }

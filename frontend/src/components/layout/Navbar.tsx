@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import LanguageSwitcher from "./LanguageSwitcher";
 import { useI18n } from "@/lib/i18n";
+import Image from "next/image";
 
 const navLinks = [
   { key: "nav.home" as const, href: "/" },
@@ -36,30 +37,14 @@ export default function Navbar() {
     <nav aria-label="Primary navigation"
       className={`fixed top-0 w-full z-50 nav-transition ${
         isScrolled
-          ? "bg-white/95 backdrop-blur-md shadow-lg py-3"
-          : "bg-transparent py-5"
+          ? "bg-white/82 backdrop-blur-2xl border-b border-white/60 shadow-[0_10px_40px_rgba(4,44,24,.08)] py-2"
+          : "bg-transparent py-4"
       }`}
     >
       <div className="max-w-7xl mx-auto px-5 lg:px-8 flex items-center justify-between">
         {/* Logo */}
-        <Link href="/" aria-label="Isoko y'Ubworozi home" className="flex items-center gap-2 shrink-0 rounded-lg">
-          <div
-            className={`w-9 h-9 rounded-lg flex items-center justify-center text-sm font-black ${
-              isScrolled
-                ? "bg-isoko-dark text-isoko-accent"
-                : "bg-white/15 text-isoko-accent backdrop-blur-sm"
-            }`}
-          >
-            <i aria-hidden="true" className="fa-solid fa-seedling"></i>
-          </div>
-          <span
-            className={`text-xl font-black tracking-tight ${
-              isScrolled ? "text-isoko-dark" : "text-white"
-            }`}
-          >
-            ISOKO
-            <span className="text-isoko-accent">.</span>
-          </span>
+        <Link href="/" aria-label="Isoko y'Ubworozi home" className="shrink-0 rounded-2xl bg-white/95 px-2.5 py-1 shadow-lg shadow-black/10">
+          <Image src="https://res.cloudinary.com/dydg39ukk/image/upload/v1788943683/isoko-yubworozi-logo_ijbygk.png" alt="Isoko y'Ubworozi" width={220} height={72} priority className="h-12 w-auto sm:h-14" />
         </Link>
 
         {/* Desktop Links */}
@@ -81,6 +66,15 @@ export default function Navbar() {
         {/* Right Actions */}
         <div className="flex items-center gap-3">
           <LanguageSwitcher isScrolled={isScrolled} />
+
+          <Link
+            href="/account"
+            aria-label={t("nav.account")}
+            title={t("nav.account")}
+            className={`grid h-10 w-10 place-items-center rounded-xl border transition hover:-translate-y-0.5 hover:border-isoko-accent hover:text-isoko-accent ${isScrolled ? "border-black/10 bg-white text-isoko-dark" : "border-white/20 bg-white/10 text-white backdrop-blur-xl"}`}
+          >
+            <i aria-hidden="true" className="fa-regular fa-user" />
+          </Link>
 
           <a
             href="https://youtube.com/@Isokoyubworozi"
@@ -163,6 +157,9 @@ export default function Navbar() {
                 ))}
               </div>
               <div className="p-6 border-t border-gray-100">
+                <Link href="/account" onClick={() => setMobileOpen(false)} className="mb-3 flex items-center justify-center gap-2 rounded-lg border border-isoko-dark/10 py-3 text-xs font-black uppercase tracking-wider text-isoko-dark">
+                  <i className="fa-regular fa-user" />{t("nav.account")}
+                </Link>
                 <a
                   href="https://youtube.com/@Isokoyubworozi"
                   target="_blank"

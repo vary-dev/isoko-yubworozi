@@ -3,12 +3,14 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
+import Image from 'next/image';
 
 const menuItems = [
   { name: "Dashboard", icon: "fa-chart-pie", href: "/admin" },
   { name: "Farming Books", icon: "fa-book", href: "/admin/books" },
   { name: "Blog Gazette", icon: "fa-newspaper", href: "/admin/articles" },
   { name: "YouTube Hub", icon: "fa-brands fa-youtube", href: "/admin/videos" },
+  { name: "Media Library", icon: "fa-images", href: "/admin/media" },
   { name: "Analytics", icon: "fa-chart-line", href: "/admin/analytics" },
 ];
 
@@ -18,17 +20,16 @@ export default function AdminSidebar() {
   const [isOpen, setIsOpen] = useState(false);
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
+    sessionStorage.removeItem('admin_token');
+    sessionStorage.removeItem('admin_user');
     router.push('/login');
   };
 
-  const NavContent = () => (
+  const renderNavContent = () => (
     <>
-      <div className="mb-12 px-4">
-        <h1 className="text-2xl font-black tracking-tighter text-white">
-          ISOKO <span className="text-isoko-accent text-[10px] block uppercase tracking-[0.3em]">Command Center</span>
-        </h1>
+      <div className="mb-9 px-3">
+        <Image src="https://res.cloudinary.com/dydg39ukk/image/upload/v1788943683/isoko-yubworozi-logo_ijbygk.png" alt="Isoko y'Ubworozi" width={220} height={75} className="h-16 w-auto object-contain brightness-0 invert" priority />
+        <span className="mt-2 block text-[9px] font-extrabold uppercase tracking-[0.24em] text-lime">Admin Studio</span>
       </div>
 
       <nav className="flex-1 space-y-2">
@@ -40,15 +41,15 @@ export default function AdminSidebar() {
               href={item.href} 
               onClick={() => setIsOpen(false)}
               className={`relative flex items-center gap-4 px-6 py-4 rounded-2xl transition-all group ${
-                isActive ? "text-white" : "text-gray-400 hover:text-white"
+                isActive ? "text-white" : "text-white/55 hover:text-white"
               }`}
             >
               <i className={`${item.icon} text-lg group-hover:text-isoko-accent transition-colors`}></i>
               <span className="font-bold text-xs uppercase tracking-widest">{item.name}</span>
               {isActive && (
-                <motion.div 
+                <motion.div
                   layoutId="activeNav"
-                  className="absolute inset-0 bg-isoko-primary rounded-2xl -z-10 shadow-lg shadow-isoko-primary/20"
+                  className="absolute inset-0 bg-white/10 rounded-2xl -z-10"
                 />
               )}
             </Link>
@@ -77,8 +78,8 @@ export default function AdminSidebar() {
       </div>
 
       {/* Desktop Sidebar */}
-      <aside className="hidden lg:flex w-72 bg-isoko-dark fixed h-screen flex-col p-6 z-50">
-        <NavContent />
+      <aside className="hidden lg:flex w-72 bg-forest fixed h-screen flex-col p-6 z-50">
+        {renderNavContent()}
       </aside>
 
       {/* Mobile Drawer (Overlay) */}
@@ -93,9 +94,9 @@ export default function AdminSidebar() {
             <motion.aside 
               initial={{ x: "-100%" }} animate={{ x: 0 }} exit={{ x: "-100%" }}
               transition={{ type: "spring", damping: 25, stiffness: 200 }}
-              className="fixed top-0 left-0 w-72 h-screen bg-isoko-dark p-6 z-[90] lg:hidden flex flex-col"
+              className="fixed top-0 left-0 w-72 h-screen bg-forest p-6 z-[90] lg:hidden flex flex-col"
             >
-              <NavContent />
+              {renderNavContent()}
             </motion.aside>
           </>
         )}

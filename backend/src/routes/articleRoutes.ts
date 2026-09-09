@@ -1,11 +1,12 @@
 import express from 'express';
 import { createArticle, getArticles, getArticleById, updateArticle, deleteArticle } from '../controllers/articleController';
 import { uploadImage } from '../middleware/upload';
+import { protect, adminOnly } from '../middleware/auth';
 
 const router = express.Router();
 
 // POST: /api/articles (Uploads one image named 'image')
-router.post('/', uploadImage.single('image'), createArticle);
+router.post('/', protect, adminOnly, uploadImage.single('image'), createArticle);
 
 // GET: /api/articles
 router.get('/', getArticles);
@@ -14,9 +15,9 @@ router.get('/', getArticles);
 router.get('/:id', getArticleById);
 
 // PUT: /api/articles/:id (optional image re-upload)
-router.put('/:id', uploadImage.single('image'), updateArticle);
+router.put('/:id', protect, adminOnly, uploadImage.single('image'), updateArticle);
 
 // DELETE: /api/articles/:id
-router.delete('/:id', deleteArticle);
+router.delete('/:id', protect, adminOnly, deleteArticle);
 
 export default router;

@@ -9,6 +9,7 @@ import articleRoutes from './routes/articleRoutes';
 import videoRoutes from './routes/videoRoutes';
 import authRoutes from './routes/authRoutes';
 import statsRoutes from './routes/statsRoutes';
+import mediaRoutes from './routes/mediaRoutes';
 
 // Initialization
 dotenv.config();
@@ -17,7 +18,13 @@ connectDB();
 const app = express();
 
 // Middleware
-app.use(cors());
+const allowedOrigins = [process.env.CLIENT_URL, process.env.ADMIN_URL].filter(Boolean) as string[];
+app.use(cors({
+  origin(origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
+    return callback(new Error('Origin is not allowed by CORS'));
+  },
+}));
 app.use(express.json());
 
 // Root Health Check
@@ -31,6 +38,7 @@ app.use('/api/articles', articleRoutes);
 app.use('/api/videos', videoRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/stats', statsRoutes);
+app.use('/api/media', mediaRoutes);
 
 // Global Error Handler (catches multer/file upload errors)
 app.use((err: any, _req: any, res: any, _next: any) => {

@@ -13,7 +13,7 @@ export default function PageHero({ eyebrow, title, body, image, icon }: { eyebro
             <i aria-hidden="true" className={`${icon} text-isoko-accent`} />
             <span className="text-white/85 uppercase font-black tracking-[0.18em] text-[10px]">{eyebrow}</span>
           </div>
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-white mb-4 text-balance">{title}</h1>
+          <h1 className="max-w-3xl text-3xl font-extrabold leading-tight text-white text-balance sm:text-4xl lg:text-5xl">{title}</h1>
           <p className="text-white/75 max-w-xl text-base sm:text-lg leading-relaxed">{body}</p>
         </motion.div>
       </div>
