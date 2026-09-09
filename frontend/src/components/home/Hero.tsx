@@ -1,119 +1,43 @@
 "use client";
-import { useState } from "react";
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import Link from "next/link";
 import { useI18n } from "@/lib/i18n";
+import { buttonVariants } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 
 export default function Hero() {
-  const [videoLoaded, setVideoLoaded] = useState(false);
   const { t } = useI18n();
-
+  const reduced = useReducedMotion();
   return (
-    <section aria-labelledby="hero-title" className="relative w-full min-h-[680px] h-[92svh] max-h-[920px] bg-isoko-dark flex items-center overflow-hidden">
-      {/* Background Video + Fallback */}
-      <div className="absolute inset-0 z-0">
-        {!videoLoaded && (
-          <div
-            className="absolute inset-0 bg-cover bg-center z-10"
-            style={{
-              backgroundImage:
-                "url('https://images.unsplash.com/photo-1516467508483-a7212febe31a?q=80&w=2073')",
-            }}
-          />
-        )}
-        <video
-          autoPlay
-          muted
-          loop
-          playsInline
-          onLoadedData={() => setVideoLoaded(true)}
-          preload="metadata"
-          poster="https://images.unsplash.com/photo-1516467508483-a7212febe31a?q=70&w=1600&auto=format&fit=crop"
-          aria-hidden="true"
-          className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ${
-            videoLoaded ? "opacity-35" : "opacity-0"
-          }`}
-        >
-          <source
-            src="https://assets.mixkit.co/videos/preview/mixkit-freezing-fog-on-the-fields-of-a-farm-34440-large.mp4"
-            type="video/mp4"
-          />
-        </video>
-      </div>
-
-      {/* Gradient Overlay */}
-      <div className="absolute inset-0 z-10 bg-gradient-to-r from-isoko-dark via-isoko-dark/85 to-isoko-dark/40" />
-      <div className="absolute inset-0 z-10 bg-gradient-to-t from-isoko-dark/60 via-transparent to-transparent" />
-
-      {/* Content */}
-      <div className="max-w-7xl mx-auto px-5 sm:px-8 lg:px-10 w-full relative z-20 pt-20">
-        <div className="max-w-2xl">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, ease: "easeOut" }}
-          >
-            <div className="flex items-center gap-3 mb-5">
-              <span className="h-[2px] w-10 bg-isoko-accent"></span>
-              <span className="text-isoko-accent uppercase font-black tracking-[0.25em] text-[11px]">
-                {t("hero.eyebrow")}
-              </span>
-            </div>
-
-            <h1 id="hero-title" className="text-[clamp(2.65rem,8vw,5rem)] font-black text-white leading-[1.02] mb-6 text-balance">
-              {t("hero.title")}
-              <br />
-              <span className="bg-gradient-to-r from-isoko-accent to-[#7BC96F] bg-clip-text text-transparent">
-                {t("hero.titleAccent")}
-              </span>
-            </h1>
-
-            <p className="text-white/70 text-base sm:text-lg mb-9 leading-relaxed max-w-lg font-medium">
-              {t("hero.body")}
-            </p>
-
-            <div className="flex flex-col xs:flex-row sm:flex-row gap-3 sm:gap-4">
-              <a
-                href="https://youtube.com/@Isokoyubworozi"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group flex min-h-12 items-center justify-center gap-3 bg-[#e00000] text-white px-6 sm:px-8 py-4 rounded-xl font-black text-sm uppercase tracking-wide hover:bg-[#bd0000] hover:-translate-y-0.5 transition-all shadow-xl shadow-red-950/30"
-              >
-                <i className="fa-brands fa-youtube text-lg"></i>
-                {t("hero.watch")}
-              </a>
-
-              <Link
-                href="/blog"
-                className="flex min-h-12 items-center justify-center gap-3 bg-white/10 backdrop-blur-xl border border-white/30 text-white px-6 sm:px-8 py-4 rounded-xl font-black text-sm uppercase tracking-wide hover:bg-white/20 hover:-translate-y-0.5 transition-all"
-              >
-                {t("hero.read")}
-              </Link>
-            </div>
-
-            {/* Quick stats */}
-            <div className="grid grid-cols-3 gap-3 sm:gap-8 mt-10 sm:mt-12 pt-7 sm:pt-8 border-t border-white/15 max-w-xl">
-              <div>
-                <p className="text-2xl font-black text-white">100+</p>
-                <p className="text-[11px] text-white/50 font-bold uppercase tracking-wider">
-                  {t("hero.videos")}
-                </p>
-              </div>
-              <div>
-                <p className="text-2xl font-black text-white">5K+</p>
-                <p className="text-[11px] text-white/50 font-bold uppercase tracking-wider">
-                  {t("hero.farmers")}
-                </p>
-              </div>
-              <div>
-                <p className="text-2xl font-black text-white">Weekly</p>
-                <p className="text-[11px] text-white/50 font-bold uppercase tracking-wider">
-                  {t("hero.new")}
-                </p>
-              </div>
-            </div>
-          </motion.div>
-        </div>
+    <section aria-labelledby="hero-title" className="relative isolate min-h-[780px] overflow-hidden bg-isoko-dark pt-28 lg:flex lg:min-h-[860px] lg:items-center">
+      <div className="absolute inset-0 -z-30 bg-[url('https://images.unsplash.com/photo-1548550023-2bdb3c5beed7?q=85&w=2100&auto=format&fit=crop')] bg-cover bg-center" />
+      <div className="absolute inset-0 -z-20 bg-[linear-gradient(100deg,rgba(3,38,19,.98)_4%,rgba(6,59,31,.88)_52%,rgba(6,59,31,.42)_100%)]" />
+      <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_72%_24%,rgba(125,205,87,.22),transparent_32%)]" />
+      <div className="section-shell grid gap-12 py-20 lg:grid-cols-[1.18fr_.82fr] lg:items-center">
+        <motion.div initial={reduced ? false : { opacity: 0, y: 28 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: .7 }}>
+          <span className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-sm font-bold text-white backdrop-blur-xl">
+            <span className="h-2 w-2 rounded-full bg-isoko-gold" />{t("hero.eyebrow")}
+          </span>
+          <h1 id="hero-title" className="max-w-4xl text-[clamp(3rem,7vw,6.35rem)] font-extrabold leading-[.98] text-white text-balance">
+            {t("hero.title")} <span className="bg-gradient-to-r from-[#a7e879] to-isoko-gold bg-clip-text text-transparent">{t("hero.titleAccent")}</span>
+          </h1>
+          <p className="mt-7 max-w-2xl text-lg leading-8 text-white/78 sm:text-xl">{t("hero.body")}</p>
+          <div className="mt-9 flex flex-col gap-3 sm:flex-row">
+            <Link href="/videos" className={cn(buttonVariants({ variant: "youtube", size: "lg" }))}><i className="fa-brands fa-youtube text-lg" />{t("hero.watch")}</Link>
+            <Link href="/blog" className={cn(buttonVariants({ variant: "glass", size: "lg" }))}>{t("hero.read")}<i className="fa-solid fa-arrow-right text-xs" /></Link>
+          </div>
+        </motion.div>
+        <motion.div initial={reduced ? false : { opacity: 0, x: 28 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: .18, duration: .75 }} className="grid gap-4 sm:grid-cols-3 lg:grid-cols-1">
+          {[["100+", t("hero.videos"), "fa-circle-play"], ["5K+", t("hero.farmers"), "fa-people-group"], ["Weekly", t("hero.new"), "fa-seedling"]].map(([value, label, icon]) => (
+            <Card key={label} className="group transition duration-300 hover:-translate-y-1 hover:bg-white/16">
+              <CardContent className="flex items-center gap-5 p-5">
+                <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-white/12 text-isoko-gold"><i className={`fa-solid ${icon}`} /></span>
+                <div><strong className="font-display text-2xl text-white">{value}</strong><p className="text-sm text-white/65">{label}</p></div>
+              </CardContent>
+            </Card>
+          ))}
+        </motion.div>
       </div>
     </section>
   );
