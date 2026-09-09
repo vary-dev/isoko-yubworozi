@@ -7,6 +7,7 @@ import Footer from "@/components/layout/Footer";
 import PageHero from "@/components/ui/PageHero";
 import ContentSkeleton from "@/components/ui/ContentSkeleton";
 import { useI18n } from "@/lib/i18n";
+import Image from "next/image";
 
 interface Video {
   _id: string;
@@ -52,7 +53,7 @@ export default function VideosPage() {
   };
 
   return (
-    <main>
+    <main id="main-content">
       <Navbar />
 
       <PageHero eyebrow={t("videos.eyebrow")} title={t("videos.title")} body={t("videos.body")} icon="fa-brands fa-youtube" image="https://images.unsplash.com/photo-1548550023-2bdb3c5beed7?q=80&w=1800&auto=format&fit=crop" />
@@ -102,13 +103,12 @@ export default function VideosPage() {
                   >
                     <div className="relative aspect-video rounded-xl overflow-hidden bg-gray-100 shadow-sm">
                       {thumb ? (
-                        <img
+                        <Image fill sizes="(max-width: 768px) 100vw, 33vw"
                           src={thumb}
                           alt={video.title}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                          className="object-cover group-hover:scale-105 transition-transform duration-500"
                           onError={(e) => {
-                            (e.target as HTMLImageElement).style.display =
-                              "none";
+                            e.currentTarget.style.display = "none";
                           }}
                         />
                       ) : (
@@ -144,7 +144,7 @@ export default function VideosPage() {
               </div>
               <p className="text-gray-400 font-bold text-sm mb-4">
                 {filter !== "All"
-                  ? `No videos found in "${filter}" category.`
+                  ? t("videos.noCategory")
                   : t("videos.empty")}
               </p>
               <a
@@ -154,7 +154,7 @@ export default function VideosPage() {
                 className="inline-flex items-center gap-2 text-red-500 font-bold text-sm hover:underline"
               >
                 <i className="fa-brands fa-youtube"></i>
-                Visit our YouTube channel
+                {t("videos.visit")}
               </a>
             </div>
           )}
