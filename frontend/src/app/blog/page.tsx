@@ -7,6 +7,7 @@ import Footer from "@/components/layout/Footer";
 import PageHero from "@/components/ui/PageHero";
 import ContentSkeleton from "@/components/ui/ContentSkeleton";
 import { useI18n } from "@/lib/i18n";
+import Image from "next/image";
 
 interface Article {
   _id: string;
@@ -51,7 +52,7 @@ export default function BlogPage() {
   // Article detail view
   if (selected) {
     return (
-      <main>
+      <main id="main-content">
         <Navbar />
         <article className="pt-28 pb-20">
           <div className="max-w-3xl mx-auto px-5 lg:px-8">
@@ -84,11 +85,11 @@ export default function BlogPage() {
             </p>
 
             {selected.image && (
-              <div className="aspect-[16/9] rounded-xl overflow-hidden mb-8 bg-gray-100">
-                <img
+              <div className="relative aspect-[16/9] rounded-xl overflow-hidden mb-8 bg-gray-100">
+                <Image fill sizes="(max-width: 768px) 100vw, 768px"
                   src={selected.image}
                   alt={selected.title}
-                  className="w-full h-full object-cover"
+                  className="object-cover"
                 />
               </div>
             )}
@@ -105,7 +106,7 @@ export default function BlogPage() {
   }
 
   return (
-    <main>
+    <main id="main-content">
       <Navbar />
 
       <PageHero eyebrow={t("blog.eyebrow")} title={t("blog.title")} body={t("blog.body")} icon="fa-solid fa-newspaper" image="https://images.unsplash.com/photo-1500595046743-cd271d694d30?q=80&w=1800&auto=format&fit=crop" />
@@ -148,12 +149,12 @@ export default function BlogPage() {
                   viewport={{ once: true }}
                   className="bg-white rounded-xl border border-gray-100 overflow-hidden group hover:shadow-lg transition-all text-left"
                 >
-                  <div className="aspect-[16/10] overflow-hidden bg-gray-100">
+                  <div className="relative aspect-[16/10] overflow-hidden bg-gray-100">
                     {article.image ? (
-                      <img
+                      <Image fill sizes="(max-width: 768px) 100vw, 33vw"
                         src={article.image}
                         alt={article.title}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        className="object-cover group-hover:scale-105 transition-transform duration-500"
                       />
                     ) : (
                       <div className="w-full h-full bg-gradient-to-br from-isoko-light to-gray-100 flex items-center justify-center">
@@ -195,7 +196,7 @@ export default function BlogPage() {
               </div>
               <p className="text-gray-400 font-bold text-sm">
                 {filter !== "All"
-                  ? `No articles found in "${filter}" category.`
+                  ? t("blog.noCategory")
                   : t("blog.empty")}
               </p>
             </div>
