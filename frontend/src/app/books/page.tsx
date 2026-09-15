@@ -27,11 +27,12 @@ export default function BooksPage() {
   const [books, setBooks] = useState<Book[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("All");
+  const [error, setError] = useState(false);
 
   useEffect(() => {
     fetchBooks()
       .then((res) => setBooks(res.data))
-      .catch(() => {})
+      .catch(() => setError(true))
       .finally(() => setLoading(false));
   }, []);
 
@@ -97,7 +98,7 @@ export default function BooksPage() {
                 >
                   <div className="flex gap-5 p-5">
                     {/* Cover */}
-                    <div className="w-28 h-40 rounded-lg overflow-hidden bg-gray-100 shrink-0 shadow-sm">
+                    <div className="relative w-28 h-40 rounded-lg overflow-hidden bg-gray-100 shrink-0 shadow-sm">
                       {book.coverImage ? (
                         <Image fill sizes="112px"
                           src={book.coverImage}
@@ -124,7 +125,7 @@ export default function BooksPage() {
                         )}
                       </div>
                       <h3 className="text-[15px] font-bold text-isoko-dark leading-snug line-clamp-2 mb-2">
-                        {book.title}
+                        <Link href={`/books/${book._id}`} className="hover:text-isoko-primary">{book.title}</Link>
                       </h3>
                       <p className="text-gray-400 text-xs leading-relaxed line-clamp-3 mb-3">
                         {book.description}
@@ -156,15 +157,15 @@ export default function BooksPage() {
           )}
 
           {/* Empty */}
-          {!loading && filtered.length === 0 && (
+          {!loading && (error || filtered.length === 0) && (
             <div className="text-center py-20">
               <div className="w-16 h-16 bg-gray-100 rounded-xl flex items-center justify-center mx-auto mb-4">
                 <i className="fa-solid fa-book text-2xl text-gray-300"></i>
               </div>
               <p className="text-gray-400 font-bold text-sm">
-                {filter !== "All"
+                {error ? t("library.loadError") : (filter !== "All"
                   ? t("library.noCategory")
-                  : t("library.empty")}
+                  : t("library.empty"))}
               </p>
             </div>
           )}

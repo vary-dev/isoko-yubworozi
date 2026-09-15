@@ -12,6 +12,8 @@ export const uploadArticle = (data: FormData) => API.post('/articles', data);
 export const updateArticle = (id: string, data: FormData) => API.put(`/articles/${id}`, data);
 export const deleteArticle = (id: string) => API.delete(`/articles/${id}`);
 export const getVideos = () => API.get('/videos');
+export const getYouTubeChannelVideos = (limit = 12) => API.get('/youtube/latest', { params: { limit } });
+export const syncYouTubeChannel = (limit = 12) => API.post('/youtube/sync', { limit });
 export const uploadVideo = (data: { title: string; youtubeUrl: string; category: string }) => API.post('/videos', data);
 export const updateVideo = (id: string, data: { title: string; youtubeUrl: string; category: string }) => API.put(`/videos/${id}`, data);
 export const deleteVideo = (id: string) => API.delete(`/videos/${id}`);

@@ -93,3 +93,10 @@ h1, h2, h3, h4, h5, h6 {
 .glass-card { border: 1px solid rgb(255 255 255 / .2); background: rgb(255 255 255 / .1); color: white; box-shadow: 0 24px 80px rgb(2 32 16 / .2); backdrop-filter: blur(22px); }
 .section-shell { width: min(100% - 2.5rem, 80rem); margin-inline: auto; }
 .text-balance { text-wrap: balance; }
+.article-content h2 { margin: 2rem 0 .75rem; color: var(--color-isoko-dark); font-size: 1.6rem; font-weight: 800; }
+.article-content h3 { margin: 1.6rem 0 .6rem; color: var(--color-isoko-dark); font-size: 1.25rem; font-weight: 800; }
+.article-content p, .article-content ul, .article-content ol, .article-content blockquote { margin-block: 1rem; }
+.article-content ul, .article-content ol { padding-left: 1.5rem; }
+.article-content blockquote { border-left: 4px solid var(--color-isoko-accent); background: #f5faf6; padding: 1rem 1.25rem; }
+.article-content img { margin-block: 1.5rem; width: 100%; border-radius: 1rem; }
+.article-content a { color: var(--color-isoko-primary); font-weight: 700; text-decoration: underline; }

@@ -42,6 +42,16 @@ export const getArticleById = async (req: Request, res: Response) => {
   }
 };
 
+export const getArticleBySlug = async (req: Request, res: Response) => {
+  try {
+    const article = await Article.findOne({ slug: req.params.slug });
+    if (!article) return res.status(404).json({ message: 'Article not found' });
+    res.json(article);
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching article', error });
+  }
+};
+
 export const updateArticle = async (req: Request, res: Response) => {
   try {
     const { title, content, category, author, imageUrl } = req.body;

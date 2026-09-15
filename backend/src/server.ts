@@ -10,6 +10,7 @@ import videoRoutes from './routes/videoRoutes';
 import authRoutes from './routes/authRoutes';
 import statsRoutes from './routes/statsRoutes';
 import mediaRoutes from './routes/mediaRoutes';
+import youtubeRoutes from './routes/youtubeRoutes';
 
 // Initialization
 dotenv.config();
@@ -39,6 +40,7 @@ app.use('/api/videos', videoRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/stats', statsRoutes);
 app.use('/api/media', mediaRoutes);
+app.use('/api/youtube', youtubeRoutes);
 
 // Global Error Handler (catches multer/file upload errors)
 app.use((err: any, _req: any, res: any, _next: any) => {

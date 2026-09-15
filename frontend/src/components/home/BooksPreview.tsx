@@ -90,9 +90,7 @@ export default function BooksPreview() {
                 <span className="text-[10px] font-black uppercase text-isoko-accent tracking-wider">
                   {book.category}
                 </span>
-                <h3 className="text-sm font-bold text-isoko-dark mt-1 line-clamp-2 group-hover:text-isoko-primary transition">
-                  {book.title}
-                </h3>
+                <h3 className="text-sm font-bold text-isoko-dark mt-1 line-clamp-2 group-hover:text-isoko-primary transition"><Link href={`/books/${book._id}`}>{book.title}</Link></h3>
                 <p className="text-xs text-gray-400 mt-1 font-medium">
                   {book.price > 0
                     ? `${book.price.toLocaleString()} RWF`
