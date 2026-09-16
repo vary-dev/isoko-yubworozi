@@ -1,9 +1,11 @@
 import { Request, Response } from 'express';
+import mongoose from 'mongoose';
 import Book from '../models/Book';
 
 const isHttpsUrl = (value: unknown) => {
   try { return new URL(String(value)).protocol === 'https:'; } catch { return false; }
 };
+const escapeRegExp = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 const publicBook = (book: any) => {
   const value = book.toObject();
@@ -55,9 +57,16 @@ export const createBook = async (req: Request, res: Response) => {
  * @desc    Get all books
  * @route   GET /api/books
  */
-export const getBooks = async (_req: Request, res: Response) => {
+export const getBooks = async (req: Request, res: Response) => {
   try {
-    const books = await Book.find().sort({ createdAt: -1 });
+    const filter: Record<string, unknown> = {};
+    if (typeof req.query.category === 'string' && req.query.category.trim()) filter.category = req.query.category.trim();
+    if (typeof req.query.q === 'string' && req.query.q.trim()) {
+      const term = new RegExp(escapeRegExp(req.query.q.trim()), 'i');
+      filter.$or = [{ title: term }, { description: term }, { category: term }];
+    }
+    const limit = Math.min(Math.max(Number(req.query.limit) || 100, 1), 100);
+    const books = await Book.find(filter).sort({ createdAt: -1 }).limit(limit);
     res.status(200).json(books.map(publicBook));
   } catch (error) {
     res.status(500).json({ message: 'Error fetching books', error });
@@ -70,6 +79,7 @@ export const getBooks = async (_req: Request, res: Response) => {
  */
 export const getBookById = async (req: Request, res: Response) => {
   try {
+    if (!mongoose.isValidObjectId(req.params.id)) return res.status(400).json({ message: 'Invalid book identifier' });
     const book = await Book.findById(req.params.id);
     if (!book) return res.status(404).json({ message: 'Book not found' });
     res.status(200).json(publicBook(book));
@@ -84,6 +94,7 @@ export const getBookById = async (req: Request, res: Response) => {
  */
 export const deleteBook = async (req: Request, res: Response) => {
   try {
+    if (!mongoose.isValidObjectId(req.params.id)) return res.status(400).json({ message: 'Invalid book identifier' });
     const book = await Book.findByIdAndDelete(req.params.id);
     if (!book) return res.status(404).json({ message: 'Book not found' });
     res.status(200).json({ message: 'Book deleted successfully' });
@@ -99,15 +110,15 @@ export const deleteBook = async (req: Request, res: Response) => {
 export const updateBook = async (req: Request, res: Response) => {
   try {
     const { title, description, category, price, isPremium, coverImageUrl } = req.body;
+    if (!mongoose.isValidObjectId(req.params.id)) return res.status(400).json({ message: 'Invalid book identifier' });
     const files = req.files as { [fieldname: string]: Express.Multer.File[] };
 
-    const updateData: Record<string, any> = {
-      title,
-      description,
-      category,
-      price: Number(price) || 0,
-      isPremium: isPremium === 'true' || isPremium === true,
-    };
+    const updateData: Record<string, unknown> = {};
+    if (title !== undefined) updateData.title = title;
+    if (description !== undefined) updateData.description = description;
+    if (category !== undefined) updateData.category = category;
+    if (price !== undefined) updateData.price = Number(price) || 0;
+    if (isPremium !== undefined) updateData.isPremium = isPremium === 'true' || isPremium === true;
 
     // If new files were uploaded, update their paths
     if (files?.['coverImage']?.[0]?.path) {
@@ -120,7 +131,7 @@ export const updateBook = async (req: Request, res: Response) => {
       updateData.fileUrl = files['fileUrl'][0].path;
     }
 
-    const book = await Book.findByIdAndUpdate(req.params.id, updateData, { new: true });
+    const book = await Book.findByIdAndUpdate(req.params.id, updateData, { new: true, runValidators: true });
     if (!book) return res.status(404).json({ message: 'Book not found' });
     res.status(200).json(book);
   } catch (error) {

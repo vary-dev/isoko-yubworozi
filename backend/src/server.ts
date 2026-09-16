@@ -6,7 +6,6 @@ import { connectDB } from './config/db';
 // Route Imports
 import bookRoutes from './routes/bookRoutes';
 import articleRoutes from './routes/articleRoutes';
-import videoRoutes from './routes/videoRoutes';
 import authRoutes from './routes/authRoutes';
 import statsRoutes from './routes/statsRoutes';
 import mediaRoutes from './routes/mediaRoutes';
@@ -36,7 +35,6 @@ app.get('/', (_req, res) => {
 // API Routes
 app.use('/api/books', bookRoutes);
 app.use('/api/articles', articleRoutes);
-app.use('/api/videos', videoRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/stats', statsRoutes);
 app.use('/api/media', mediaRoutes);
