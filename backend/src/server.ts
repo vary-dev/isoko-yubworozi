@@ -18,13 +18,24 @@ connectDB();
 const app = express();
 
 // Middleware
-const allowedOrigins = [process.env.CLIENT_URL, process.env.ADMIN_URL].filter(Boolean) as string[];
+const allowedOrigins = new Set(
+  [
+    'https://isokoyubworozi.vercel.app',
+    'http://localhost:3000',
+    'http://localhost:3001',
+    process.env.CLIENT_URL,
+    process.env.ADMIN_URL,
+  ].filter((origin): origin is string => Boolean(origin)),
+);
+
 app.use(cors({
   origin(origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
+    if (!origin || allowedOrigins.has(origin)) return callback(null, true);
     return callback(new Error('Origin is not allowed by CORS'));
   },
+  credentials: true,
 }));
+
 app.use(express.json());
 
 // Root Health Check
