@@ -24,6 +24,7 @@ export default function Navbar() {
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 50);
+    handleScroll();
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
@@ -36,7 +37,7 @@ export default function Navbar() {
   return (
     <nav aria-label="Primary navigation"
       className={`fixed top-0 w-full z-50 nav-transition ${
-        isScrolled
+        isScrolled || mobileOpen
           ? "bg-white/82 backdrop-blur-2xl border-b border-white/60 shadow-[0_10px_40px_rgba(4,44,24,.08)] py-2"
           : "bg-transparent py-4"
       }`}
@@ -55,7 +56,7 @@ export default function Navbar() {
               href={link.href}
               aria-current={pathname === link.href ? "page" : undefined}
               className={`text-[13px] font-bold uppercase tracking-widest transition-colors hover:text-isoko-accent ${
-                isScrolled ? "text-isoko-dark" : "text-white/90"
+                isScrolled || mobileOpen ? "text-isoko-dark" : "text-white/90"
               } ${pathname === link.href ? "text-isoko-accent" : ""}`}
             >
               {t(link.key)}
@@ -65,13 +66,13 @@ export default function Navbar() {
 
         {/* Right Actions */}
         <div className="flex items-center gap-3">
-          <LanguageSwitcher isScrolled={isScrolled} />
+          <LanguageSwitcher isScrolled={isScrolled || mobileOpen} />
 
           <Link
             href="/account"
             aria-label={t("nav.account")}
             title={t("nav.account")}
-            className={`grid h-10 w-10 place-items-center rounded-xl border transition hover:-translate-y-0.5 hover:border-isoko-accent hover:text-isoko-accent ${isScrolled ? "border-black/10 bg-white text-isoko-dark" : "border-white/20 bg-white/10 text-white backdrop-blur-xl"}`}
+            className={`grid h-10 w-10 place-items-center rounded-xl border transition hover:-translate-y-0.5 hover:border-isoko-accent hover:text-isoko-accent ${isScrolled || mobileOpen ? "border-black/10 bg-white text-isoko-dark" : "border-white/20 bg-white/10 text-white backdrop-blur-xl"}`}
           >
             <i aria-hidden="true" className="fa-regular fa-user" />
           </Link>
@@ -94,7 +95,7 @@ export default function Navbar() {
             aria-expanded={mobileOpen}
             aria-controls="mobile-navigation"
             className={`lg:hidden w-10 h-10 rounded-lg flex items-center justify-center transition ${
-              isScrolled
+              isScrolled || mobileOpen
                 ? "bg-gray-100 text-isoko-dark"
                 : "bg-white/10 text-white"
             }`}
@@ -128,7 +129,7 @@ export default function Navbar() {
               role="dialog"
               aria-modal="true"
               aria-label="Mobile navigation"
-              className="fixed top-0 right-0 w-[min(88vw,22rem)] h-full bg-white z-50 lg:hidden flex flex-col shadow-2xl"
+              className="fixed top-0 right-0 w-[min(88vw,22rem)] h-dvh bg-white z-50 lg:hidden flex flex-col shadow-2xl opacity-100"
             >
               <div className="p-6 border-b border-gray-100 flex items-center justify-between">
                 <span className="text-lg font-black text-isoko-dark tracking-tight">

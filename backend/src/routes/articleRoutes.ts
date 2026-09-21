@@ -1,5 +1,5 @@
 import express from 'express';
-import { createArticle, getArticles, getArticleById, updateArticle, deleteArticle } from '../controllers/articleController';
+import { createArticle, getArticles, getArticleById, getArticleBySlug, updateArticle, deleteArticle } from '../controllers/articleController';
 import { uploadImage } from '../middleware/upload';
 import { protect, adminOnly } from '../middleware/auth';
 
@@ -10,6 +10,8 @@ router.post('/', protect, adminOnly, uploadImage.single('image'), createArticle)
 
 // GET: /api/articles
 router.get('/', getArticles);
+
+router.get('/slug/:slug', getArticleBySlug);
 
 // GET: /api/articles/:id
 router.get('/:id', getArticleById);
