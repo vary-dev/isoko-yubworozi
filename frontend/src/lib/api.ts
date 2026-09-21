@@ -1,7 +1,10 @@
 import axios from 'axios';
 
+export const API_URL = 'https://isoko-yubworozi.onrender.com/api';
+
 const api = axios.create({
-  baseURL: process.env.NEXT_API_URL || 'http://localhost:5000/api',
+  baseURL: API_URL,
+  timeout: 20000,
 });
 
 // GETters
