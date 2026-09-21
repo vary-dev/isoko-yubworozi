@@ -4,6 +4,9 @@ import type { Metadata, Viewport } from "next";
 import Script from "next/script";
 import Providers from "@/components/Providers";
 
+const productionSiteUrl =
+  process.env.NEXT_PUBLIC_SITE_URL || "https://isokoyubworozi.vercel.app";
+
 const sora = Sora({
   subsets: ["latin"],
   variable: "--font-display",
@@ -17,7 +20,7 @@ const manrope = Manrope({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://isokoyubworozi.com"),
+  metadataBase: new URL(productionSiteUrl),
   title: {
     default: "Isoko y'Ubworozi | Poultry Farming Knowledge in Rwanda",
     template: "%s | Isoko y'Ubworozi",
@@ -73,7 +76,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             "@context": "https://schema.org",
             "@type": "Organization",
             name: "Isoko y'Ubworozi",
-            url: process.env.NEXT_PUBLIC_SITE_URL || "https://isokoyubworozi.com",
+            url: productionSiteUrl,
             sameAs: ["https://youtube.com/@Isokoyubworozi"],
             areaServed: "RW",
             description: "Digital poultry and livestock farming education platform.",
