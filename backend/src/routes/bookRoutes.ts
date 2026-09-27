@@ -6,6 +6,7 @@ import {
     deleteBook,
     updateBook,
     getAdminBooks,
+    getBookAccess,
 } from '../controllers/bookController';
 import { uploadCombined } from '../middleware/upload';
 import { protect, adminOnly } from '../middleware/auth';
@@ -26,6 +27,8 @@ router.post(
 router.get('/', getBooks);
 
 router.get('/admin/all', protect, adminOnly, getAdminBooks);
+
+router.get('/:id/access', protect, getBookAccess);
 
 // @route   GET /api/books/:id
 router.get('/:id', getBookById);

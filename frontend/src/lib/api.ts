@@ -1,18 +1,31 @@
 import axios from 'axios';
+import { getSession } from './session';
 
-export const API_URL = 'https://isoko-yubworozi.onrender.com/api';
+export const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://isoko-yubworozi.onrender.com/api';
 
 const api = axios.create({
   baseURL: API_URL,
   timeout: 20000,
 });
 
+api.interceptors.request.use((config) => {
+  const token = getSession()?.token;
+  if (token) config.headers.Authorization = `Bearer ${token}`;
+  return config;
+});
+
 // GETters
 export const fetchBooks = () => api.get('/books');
 export const fetchArticles = () => api.get('/articles');
-export const fetchLatestYouTubeVideos = (limit = 12) => api.get('/youtube/latest', { params: { limit } });
+export type VideoSort = 'latest' | 'popular' | 'old';
+export const fetchLatestYouTubeVideos = (limit = 12, sort: VideoSort = 'latest') => api.get('/youtube/latest', { params: { limit, sort } });
 export const registerUser = (data: { name: string; email: string; password: string }) => api.post('/auth/register', data);
 export const loginUser = (data: { email: string; password: string }) => api.post('/auth/login', data);
+export const fetchMyPurchases = () => api.get('/payments/me');
+export const createBookCheckout = (bookId: string) => api.post('/payments/checkout', { bookId });
+export const verifyBookPayment = (transactionId: string, txRef: string) => api.get('/payments/verify', { params: { transaction_id: transactionId, tx_ref: txRef } });
+export const fetchBookPaymentStatus = (bookId: string) => api.get(`/payments/book/${encodeURIComponent(bookId)}/status`);
+export const fetchBookAccess = (bookId: string) => api.get(`/books/${encodeURIComponent(bookId)}/access`);
 
 // POSTers (Admin)
 export const uploadBook = (formData: FormData) => api.post('/books', formData);
