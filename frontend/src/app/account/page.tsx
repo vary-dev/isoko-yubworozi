@@ -1,62 +1,86 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import Navbar from "@/components/layout/Navbar";
-import Footer from "@/components/layout/Footer";
-import PageHero from "@/components/ui/PageHero";
-import { loginUser, registerUser } from "@/lib/api";
-import { useI18n } from "@/lib/i18n";
+import axios from 'axios';
+import Image from 'next/image';
+import Link from 'next/link';
+import { useEffect, useState } from 'react';
+import Navbar from '@/components/layout/Navbar';
+import Footer from '@/components/layout/Footer';
+import PageHero from '@/components/ui/PageHero';
+import { fetchBookAccess, fetchMyPurchases, loginUser, registerUser } from '@/lib/api';
+import { clearSession, getSession, saveSession, type Session } from '@/lib/session';
+import { useI18n } from '@/lib/i18n';
 
-type Session = { _id: string; name: string; email: string; role: string; token: string };
+type Purchase = { _id: string; book?: { _id: string; title: string; coverImage?: string; category?: string }; amount: number; currency: string; status: string; paidAt?: string; createdAt: string };
+
+const dashboardCopy = {
+  en: { heading: 'Your learning dashboard', intro: 'Premium books and verified payments stay connected to this account.', library: 'Purchased books', empty: 'You have no verified premium books yet.', explore: 'Explore the library', read: 'Read book', history: 'Payment history', secure: 'Payments are completed securely by our payment partner. Isoko y’Ubworozi never stores your card number or mobile-money PIN.' },
+  rw: { heading: 'Ahantu hawe ho kwigira', intro: 'Ibitabo wishyuye n’ubwishyu bwemejwe bihuzwa n’iyi konti.', library: 'Ibitabo waguze', empty: 'Nta gitabo cyishyurwa cyemejwe uragura.', explore: 'Sura isomero', read: 'Soma igitabo', history: 'Amateka y’ubwishyu', secure: 'Ubwishyu bukorwa n’umufatanyabikorwa wizewe. Isoko y’Ubworozi ntibika nomero ya karita cyangwa PIN ya mobile money.' },
+  fr: { heading: 'Votre espace d’apprentissage', intro: 'Vos livres premium et paiements vérifiés restent liés à ce compte.', library: 'Livres achetés', empty: 'Vous n’avez pas encore de livre premium vérifié.', explore: 'Explorer la bibliothèque', read: 'Lire le livre', history: 'Historique des paiements', secure: 'Les paiements sont traités par notre partenaire sécurisé. Isoko y’Ubworozi ne stocke jamais votre numéro de carte ni votre code mobile money.' },
+};
 
 export default function AccountPage() {
-  const { t } = useI18n();
-  const [mode, setMode] = useState<"login" | "register">("login");
+  const { t, locale } = useI18n();
+  const words = dashboardCopy[locale];
+  const [mode, setMode] = useState<'login' | 'register'>('login');
   const [session, setSession] = useState<Session | null>(null);
+  const [purchases, setPurchases] = useState<Purchase[]>([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState('');
 
-  useEffect(() => {
-    const saved = sessionStorage.getItem("isoko-session");
-    if (!saved) return;
-    const frame = requestAnimationFrame(() => { try { setSession(JSON.parse(saved)); } catch { sessionStorage.removeItem("isoko-session"); } });
-    return () => cancelAnimationFrame(frame);
-  }, []);
+  const loadPurchases = () => fetchMyPurchases().then((response) => setPurchases(response.data)).catch(() => setPurchases([]));
+  useEffect(() => { const frame = requestAnimationFrame(() => { const saved = getSession(); setSession(saved); if (saved) loadPurchases(); }); return () => cancelAnimationFrame(frame); }, []);
 
   const submit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault(); setLoading(true); setError("");
+    event.preventDefault(); setLoading(true); setError('');
     const data = new FormData(event.currentTarget);
     try {
-      const response = mode === "register"
-        ? await registerUser({ name: String(data.get("name")), email: String(data.get("email")), password: String(data.get("password")) })
-        : await loginUser({ email: String(data.get("email")), password: String(data.get("password")) });
-      setSession(response.data); sessionStorage.setItem("isoko-session", JSON.stringify(response.data));
-    } catch { setError(t("account.error")); } finally { setLoading(false); }
+      const response = mode === 'register'
+        ? await registerUser({ name: String(data.get('name')), email: String(data.get('email')), password: String(data.get('password')) })
+        : await loginUser({ email: String(data.get('email')), password: String(data.get('password')) });
+      saveSession(response.data); setSession(response.data); await loadPurchases();
+      const next = new URLSearchParams(window.location.search).get('next');
+      if (next?.startsWith('/') && !next.startsWith('//')) window.location.assign(next);
+    } catch (requestError) {
+      setError(axios.isAxiosError(requestError) ? requestError.response?.data?.message || t('account.error') : t('account.error'));
+    } finally { setLoading(false); }
   };
 
-  const logout = () => { sessionStorage.removeItem("isoko-session"); setSession(null); };
+  const readBook = async (bookId: string) => {
+    try { const response = await fetchBookAccess(bookId); window.open(response.data.fileUrl, '_blank', 'noopener,noreferrer'); }
+    catch { setError(t('account.error')); }
+  };
+  const logout = () => { clearSession(); setSession(null); setPurchases([]); };
+  const successful = purchases.filter((purchase) => purchase.status === 'successful');
 
-  return (
-    <main id="main-content">
-      <Navbar />
-      <PageHero eyebrow={t("account.eyebrow")} title={t("account.title")} body={t("account.body")} icon="fa-solid fa-user-shield" image="https://res.cloudinary.com/dydg39ukk/image/upload/v1788949829/isoko-yubworozi-banner_txy0cd.png" />
-      <section className="bg-[#f4f8f5] py-16 sm:py-20">
-        <div className="mx-auto w-[min(100%-2.5rem,34rem)]">
-          {session ? <div className="rounded-3xl border border-isoko-dark/8 bg-white p-7 shadow-[0_20px_70px_rgba(6,59,31,.08)] sm:p-9"><span className="grid h-14 w-14 place-items-center rounded-2xl bg-isoko-light text-xl text-isoko-primary"><i className="fa-solid fa-user-check" /></span><p className="mt-6 text-sm font-extrabold uppercase tracking-[.15em] text-isoko-accent">{t("account.member")}</p><h2 className="mt-2 text-2xl font-bold text-isoko-dark">{session.name}</h2><p className="mt-1 text-slate-500">{session.email}</p><p className="mt-6 rounded-2xl bg-[#f5faf6] p-5 text-base leading-7 text-slate-600">{t("account.future")}</p><button onClick={logout} className="mt-6 min-h-11 rounded-xl border border-isoko-dark/12 px-5 text-sm font-bold text-isoko-dark hover:border-isoko-accent">{t("account.logout")}</button></div> :
-          <div className="rounded-3xl border border-isoko-dark/8 bg-white p-7 shadow-[0_20px_70px_rgba(6,59,31,.08)] sm:p-9">
-            <div className="grid grid-cols-2 rounded-xl bg-[#f2f7f3] p-1"><button type="button" onClick={() => { setMode("login"); setError(""); }} className={`min-h-11 rounded-lg text-sm font-bold ${mode === "login" ? "bg-white text-isoko-dark shadow-sm" : "text-slate-500"}`}>{t("account.login")}</button><button type="button" onClick={() => { setMode("register"); setError(""); }} className={`min-h-11 rounded-lg text-sm font-bold ${mode === "register" ? "bg-white text-isoko-dark shadow-sm" : "text-slate-500"}`}>{t("account.register")}</button></div>
-            <form onSubmit={submit} className="mt-7 space-y-5">
-              {mode === "register" && <label className="block text-sm font-bold text-isoko-dark">{t("account.name")}<input required name="name" autoComplete="name" minLength={2} className="mt-2 w-full rounded-xl border border-black/10 px-4 py-3 font-normal outline-none focus:border-isoko-accent" /></label>}
-              <label className="block text-sm font-bold text-isoko-dark">{t("account.email")}<input required type="email" name="email" autoComplete="email" className="mt-2 w-full rounded-xl border border-black/10 px-4 py-3 font-normal outline-none focus:border-isoko-accent" /></label>
-              <label className="block text-sm font-bold text-isoko-dark">{t("account.password")}<input required type="password" name="password" autoComplete={mode === "register" ? "new-password" : "current-password"} minLength={6} className="mt-2 w-full rounded-xl border border-black/10 px-4 py-3 font-normal outline-none focus:border-isoko-accent" /></label>
-              {error && <p role="alert" className="rounded-xl bg-red-50 p-4 text-sm font-bold text-red-700">{error}</p>}
-              <button disabled={loading} className="min-h-12 w-full rounded-xl bg-isoko-accent px-5 text-sm font-extrabold text-white transition hover:bg-isoko-primary disabled:cursor-wait disabled:opacity-60">{loading ? t("account.loading") : mode === "register" ? t("account.submitRegister") : t("account.submitLogin")}</button>
-            </form>
-            <button type="button" onClick={() => setMode(mode === "login" ? "register" : "login")} className="mt-5 w-full text-sm font-bold text-isoko-primary hover:underline">{mode === "login" ? t("account.switchRegister") : t("account.switchLogin")}</button>
-          </div>}
-        </div>
-      </section>
-      <Footer />
-    </main>
-  );
+  return <main id="main-content">
+    <Navbar />
+    <PageHero eyebrow={t('account.eyebrow')} title={t('account.title')} body={t('account.body')} icon="fa-solid fa-user-shield" image="https://res.cloudinary.com/dydg39ukk/image/upload/v1788949829/isoko-yubworozi-banner_txy0cd.png" />
+    <section className="bg-[#f4f8f5] py-16 sm:py-20">
+      <div className={`mx-auto w-[min(100%-2.5rem,72rem)] ${session ? '' : 'max-w-xl'}`}>
+        {session ? <div className="grid gap-6 lg:grid-cols-[.72fr_1.28fr]">
+          <aside className="h-fit rounded-3xl border border-isoko-dark/8 bg-isoko-dark p-7 text-white shadow-[0_20px_70px_rgba(6,59,31,.12)] sm:p-9">
+            <span className="grid h-14 w-14 place-items-center rounded-2xl bg-white/10 text-xl"><i className="fa-solid fa-user-check" /></span>
+            <p className="mt-6 text-xs font-extrabold uppercase tracking-[.16em] text-isoko-light">{t('account.member')}</p>
+            <h2 className="mt-2 text-2xl font-bold">{session.name}</h2><p className="mt-1 text-sm text-white/65">{session.email}</p>
+            <p className="mt-6 rounded-2xl bg-white/8 p-4 text-sm leading-6 text-white/75"><i className="fa-solid fa-shield-halved mr-2 text-isoko-light" />{words.secure}</p>
+            <button onClick={logout} className="mt-6 min-h-11 rounded-xl border border-white/15 px-5 text-sm font-bold hover:bg-white/10">{t('account.logout')}</button>
+          </aside>
+          <div className="rounded-3xl border border-isoko-dark/8 bg-white p-6 shadow-[0_20px_70px_rgba(6,59,31,.07)] sm:p-9">
+            <p className="text-xs font-black uppercase tracking-[.16em] text-isoko-accent">{words.library}</p><h2 className="mt-2 text-2xl font-bold text-isoko-dark">{words.heading}</h2><p className="mt-2 text-sm text-slate-500">{words.intro}</p>
+            {successful.length ? <div className="mt-7 grid gap-4 sm:grid-cols-2">{successful.map((purchase) => <article key={purchase._id} className="flex gap-4 rounded-2xl border border-isoko-dark/8 p-4">
+              {purchase.book?.coverImage && <div className="relative h-24 w-[4.5rem] shrink-0 overflow-hidden rounded-lg bg-isoko-light"><Image fill sizes="72px" src={purchase.book.coverImage} alt="" className="object-cover" /></div>}
+              <div className="min-w-0"><p className="text-[10px] font-black uppercase tracking-wider text-isoko-accent">{purchase.book?.category}</p><h3 className="mt-1 line-clamp-2 text-sm font-bold text-isoko-dark">{purchase.book?.title}</h3><button onClick={() => purchase.book && readBook(purchase.book._id)} className="mt-3 text-xs font-extrabold text-isoko-primary"><i className="fa-solid fa-book-open mr-1.5" />{words.read}</button></div>
+            </article>)}</div> : <div className="mt-7 rounded-2xl bg-[#f5faf6] p-7 text-center"><i className="fa-solid fa-book-open mb-3 text-2xl text-isoko-accent" /><p className="text-sm font-bold text-slate-600">{words.empty}</p><Link href="/books" className="mt-4 inline-flex text-sm font-extrabold text-isoko-primary">{words.explore}</Link></div>}
+            {purchases.length > 0 && <div className="mt-8"><h3 className="text-sm font-extrabold text-isoko-dark">{words.history}</h3><div className="mt-3 space-y-2">{purchases.map((purchase) => <div key={`history-${purchase._id}`} className="flex items-center justify-between gap-4 rounded-xl bg-[#f7faf8] px-4 py-3 text-xs"><span className="min-w-0 truncate font-bold text-slate-600">{purchase.book?.title || 'Book'}</span><span className={`shrink-0 rounded-full px-2 py-1 font-black ${purchase.status === 'successful' ? 'bg-emerald-100 text-emerald-800' : purchase.status === 'pending' ? 'bg-amber-100 text-amber-800' : 'bg-red-100 text-red-700'}`}>{purchase.status}</span></div>)}</div></div>}
+          </div>
+        </div> : <div className="rounded-3xl border border-isoko-dark/8 bg-white p-7 shadow-[0_20px_70px_rgba(6,59,31,.08)] sm:p-9">
+          <div className="mb-7 grid grid-cols-3 gap-2 text-center text-[10px] font-black uppercase tracking-wider text-slate-500"><span><i className="fa-solid fa-user-lock mb-2 block text-lg text-isoko-accent" />Account</span><span><i className="fa-solid fa-credit-card mb-2 block text-lg text-isoko-accent" />Payment</span><span><i className="fa-solid fa-book-open mb-2 block text-lg text-isoko-accent" />Access</span></div>
+          <div className="grid grid-cols-2 rounded-xl bg-[#f2f7f3] p-1"><button type="button" onClick={() => { setMode('login'); setError(''); }} className={`min-h-11 rounded-lg text-sm font-bold ${mode === 'login' ? 'bg-white text-isoko-dark shadow-sm' : 'text-slate-500'}`}>{t('account.login')}</button><button type="button" onClick={() => { setMode('register'); setError(''); }} className={`min-h-11 rounded-lg text-sm font-bold ${mode === 'register' ? 'bg-white text-isoko-dark shadow-sm' : 'text-slate-500'}`}>{t('account.register')}</button></div>
+          <form onSubmit={submit} className="mt-7 space-y-5">{mode === 'register' && <label className="block text-sm font-bold text-isoko-dark">{t('account.name')}<input required name="name" autoComplete="name" minLength={2} className="mt-2 w-full rounded-xl border border-black/10 px-4 py-3 font-normal outline-none focus:border-isoko-accent" /></label>}<label className="block text-sm font-bold text-isoko-dark">{t('account.email')}<input required type="email" name="email" autoComplete="email" className="mt-2 w-full rounded-xl border border-black/10 px-4 py-3 font-normal outline-none focus:border-isoko-accent" /></label><label className="block text-sm font-bold text-isoko-dark">{t('account.password')}<input required type="password" name="password" autoComplete={mode === 'register' ? 'new-password' : 'current-password'} minLength={6} className="mt-2 w-full rounded-xl border border-black/10 px-4 py-3 font-normal outline-none focus:border-isoko-accent" /></label>{error && <p role="alert" className="rounded-xl bg-red-50 p-4 text-sm font-bold text-red-700">{error}</p>}<button disabled={loading} className="min-h-12 w-full rounded-xl bg-isoko-accent px-5 text-sm font-extrabold text-white transition hover:bg-isoko-primary disabled:opacity-60">{loading ? t('account.loading') : mode === 'register' ? t('account.submitRegister') : t('account.submitLogin')}</button></form>
+          <button type="button" onClick={() => setMode(mode === 'login' ? 'register' : 'login')} className="mt-5 w-full text-sm font-bold text-isoko-primary hover:underline">{mode === 'login' ? t('account.switchRegister') : t('account.switchLogin')}</button>
+        </div>}
+      </div>
+    </section><Footer />
+  </main>;
 }

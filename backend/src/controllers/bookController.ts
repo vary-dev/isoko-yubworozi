@@ -1,6 +1,8 @@
 import { Request, Response } from 'express';
 import mongoose from 'mongoose';
 import Book from '../models/Book';
+import Purchase from '../models/Purchase';
+import { AuthRequest } from '../middleware/auth';
 
 const isHttpsUrl = (value: unknown) => {
   try { return new URL(String(value)).protocol === 'https:'; } catch { return false; }
@@ -144,5 +146,21 @@ export const getAdminBooks = async (_req: Request, res: Response) => {
     res.status(200).json(await Book.find().sort({ createdAt: -1 }));
   } catch (error) {
     res.status(500).json({ message: 'Error fetching admin library', error });
+  }
+};
+
+/** Return a premium file only to the account that owns a verified purchase. */
+export const getBookAccess = async (req: AuthRequest, res: Response) => {
+  try {
+    if (!mongoose.isValidObjectId(req.params.id)) return res.status(400).json({ message: 'Invalid book identifier' });
+    const book = await Book.findById(req.params.id);
+    if (!book) return res.status(404).json({ message: 'Book not found' });
+    if (book.isPremium) {
+      const purchase = await Purchase.exists({ user: req.user!.id, book: book._id, status: 'successful' });
+      if (!purchase) return res.status(403).json({ message: 'A verified purchase is required to access this book' });
+    }
+    res.json({ bookId: book._id, title: book.title, fileUrl: book.fileUrl, access: book.isPremium ? 'purchased' : 'free' });
+  } catch (error) {
+    res.status(500).json({ message: 'Unable to authorize book access', error });
   }
 };

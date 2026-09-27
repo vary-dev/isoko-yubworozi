@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
+import PremiumBookActions from '@/components/books/PremiumBookActions';
 
 interface Book {
   _id: string;
@@ -143,13 +144,7 @@ export default async function BookPage({
                     Read free book
                   </a>
                 ) : book.isPremium ? (
-                  <Link
-                    href="/account?next=/books"
-                    className="inline-flex items-center gap-2 rounded-xl bg-isoko-dark px-6 py-3.5 text-sm font-extrabold text-white"
-                  >
-                    <i className="fa-solid fa-lock" />
-                    {book.price.toLocaleString()} RWF — unlock with account
-                  </Link>
+                  <PremiumBookActions bookId={book._id} price={book.price} />
                 ) : (
                   <span className="text-sm font-bold text-slate-400">
                     File coming soon

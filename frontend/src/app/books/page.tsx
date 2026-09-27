@@ -142,7 +142,7 @@ export default function BooksPage() {
                             {t("library.download")}
                           </a>
                         ) : book.isPremium ? (
-                          <Link href="/account?next=/books" className="inline-flex items-center gap-2 rounded-lg bg-isoko-dark px-4 py-2 text-[11px] font-black uppercase tracking-wider text-white transition hover:bg-isoko-primary"><i className="fa-solid fa-lock text-[10px]" />{book.price.toLocaleString()} RWF</Link>
+                          <Link href={`/books/${book._id}`} className="inline-flex items-center gap-2 rounded-lg bg-isoko-dark px-4 py-2 text-[11px] font-black uppercase tracking-wider text-white transition hover:bg-isoko-primary"><i className="fa-solid fa-lock text-[10px]" />{book.price.toLocaleString()} RWF</Link>
                         ) : (
                           <span className="text-xs text-gray-400 font-medium italic">
                             {t("library.soon")}

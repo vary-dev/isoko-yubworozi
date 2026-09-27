@@ -1,7 +1,7 @@
 export interface YouTubeVideo {
   id: string; title: string; description: string; publishedAt: string; channelTitle: string;
   thumbnail: string; duration: string; viewCount: number; likeCount: number; commentCount: number;
-  youtubeUrl: string; embedUrl: string;
+  youtubeUrl: string; embedUrl: string; durationSeconds?: number;
 }
 export const formatCount = (value = 0, locale = 'en') => new Intl.NumberFormat(locale, { notation: 'compact', maximumFractionDigits: 1 }).format(value);
 export const formatDuration = (value = '') => {

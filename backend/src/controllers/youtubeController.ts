@@ -1,16 +1,21 @@
 import { Request, Response } from 'express';
 import Video from '../models/Video';
-import { getLatestChannelVideos } from '../services/youtubeService';
+import { getLatestChannelVideos, VideoOrder, youtubeDurationSeconds } from '../services/youtubeService';
 
 const legacyYouTubeId = (url: string) => url.match(/(?:v=|youtu\.be\/|embed\/|shorts\/)([\w-]{6,})/)?.[1] || '';
 
 export const latestChannelVideos = async (req: Request, res: Response) => {
   try {
-    const result = await getLatestChannelVideos(Number(req.query.limit) || 12);
+    const requestedOrder = String(req.query.sort || 'latest');
+    const order: VideoOrder = ['latest', 'popular', 'old'].includes(requestedOrder) ? requestedOrder as VideoOrder : 'latest';
+    const result = await getLatestChannelVideos(Number(req.query.limit) || 12, false, order);
     res.set('Cache-Control', 'public, max-age=300, stale-while-revalidate=600').json(result);
   } catch (error) {
-    const fallback = await Video.find().sort({ publishedAt: -1, createdAt: -1 }).limit(Math.min(Number(req.query.limit) || 12, 50));
-    if (fallback.length) return res.json({ videos: fallback.map((video) => { const id = video.youtubeId || legacyYouTubeId(video.youtubeUrl); return { id: id || video.id, ...video.toObject(), embedUrl: id ? `https://www.youtube-nocookie.com/embed/${id}` : '' }; }), fallback: true });
+    const requestedOrder = String(req.query.sort || 'latest');
+    const sort = requestedOrder === 'popular' ? '-viewCount' : requestedOrder === 'old' ? 'publishedAt createdAt' : '-publishedAt -createdAt';
+    const fallback = await Video.find().sort(sort).limit(50);
+    const normalVideos = fallback.filter((video) => youtubeDurationSeconds(video.duration) > 180).slice(0, Math.min(Number(req.query.limit) || 12, 50));
+    if (normalVideos.length) return res.json({ videos: normalVideos.map((video) => { const id = video.youtubeId || legacyYouTubeId(video.youtubeUrl); return { id: id || video.id, ...video.toObject(), durationSeconds: youtubeDurationSeconds(video.duration), embedUrl: id ? `https://www.youtube-nocookie.com/embed/${id}` : '' }; }), fallback: true });
     res.status(503).json({ message: error instanceof Error ? error.message : 'YouTube videos are temporarily unavailable' });
   }
 };
