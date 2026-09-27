@@ -1,13 +1,15 @@
 import express from 'express';
-import { bookPaymentStatus, createCheckout, myPurchases, paymentWebhook, verifyCheckout } from '../controllers/paymentController';
-import { protect } from '../middleware/auth';
+import { adminPayments, bookPaymentStatus, createManualPayment, issuePaymentPin, myPurchases, rejectPayment, verifyManualPin } from '../controllers/paymentController';
+import { adminOnly, protect } from '../middleware/auth';
 
 const router = express.Router();
 
-router.post('/webhook', paymentWebhook);
-router.post('/checkout', protect, createCheckout);
-router.get('/verify', protect, verifyCheckout);
+router.post('/request', protect, createManualPayment);
+router.post('/verify-pin', protect, verifyManualPin);
 router.get('/me', protect, myPurchases);
 router.get('/book/:bookId/status', protect, bookPaymentStatus);
+router.get('/admin', protect, adminOnly, adminPayments);
+router.post('/admin/:id/issue-pin', protect, adminOnly, issuePaymentPin);
+router.post('/admin/:id/reject', protect, adminOnly, rejectPayment);
 
 export default router;

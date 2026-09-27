@@ -3,6 +3,8 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import User from '../models/User';
 
+const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 const generateToken = (id: string, role: string) => {
   if (!process.env.JWT_SECRET) throw new Error('JWT_SECRET is required');
   return jwt.sign({ id, role }, process.env.JWT_SECRET, {
@@ -26,15 +28,15 @@ export const register = async (req: Request, res: Response) => {
   try {
     const { name, email, password } = req.body;
 
-    if (!name?.trim() || !email?.trim() || typeof password !== 'string' || password.length < 6) {
-      return res.status(400).json({ message: 'Name, email and a password of at least 6 characters are required' });
-    }
+    if (!name?.trim()) return res.status(400).json({ code: 'NAME_REQUIRED', message: 'Enter your full name' });
+    if (!email?.trim() || !emailPattern.test(email.trim())) return res.status(400).json({ code: 'INVALID_EMAIL', message: 'Enter a valid email address' });
+    if (typeof password !== 'string' || password.length < 6) return res.status(400).json({ code: 'WEAK_PASSWORD', message: 'Password must contain at least 6 characters' });
 
     const normalizedEmail = email.trim().toLowerCase();
 
     const userExists = await User.findOne({ email: normalizedEmail });
     if (userExists) {
-      return res.status(400).json({ message: 'User already exists' });
+      return res.status(409).json({ code: 'EMAIL_EXISTS', message: 'An account with this email already exists. Please sign in instead.' });
     }
 
     const salt = await bcrypt.genSalt(10);
@@ -48,8 +50,9 @@ export const register = async (req: Request, res: Response) => {
     });
 
     res.status(201).json(publicUser(user));
-  } catch (error) {
-    res.status(500).json({ message: 'Error registering user', error });
+  } catch (error: any) {
+    if (error?.code === 11000) return res.status(409).json({ code: 'EMAIL_EXISTS', message: 'An account with this email already exists. Please sign in instead.' });
+    res.status(500).json({ code: 'REGISTRATION_FAILED', message: 'Account creation is temporarily unavailable. Please try again.' });
   }
 };
 
@@ -67,12 +70,12 @@ export const login = async (req: Request, res: Response) => {
 
     const user = await User.findOne({ email: email.trim().toLowerCase() });
     if (!user) {
-      return res.status(401).json({ message: 'Invalid email or password' });
+      return res.status(401).json({ code: 'INVALID_CREDENTIALS', message: 'No account matched that email and password. Check them or create a new account.' });
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      return res.status(401).json({ message: 'Invalid email or password' });
+      return res.status(401).json({ code: 'INVALID_CREDENTIALS', message: 'No account matched that email and password. Check them or create a new account.' });
     }
 
     res.json(publicUser(user));

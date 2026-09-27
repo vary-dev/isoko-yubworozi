@@ -14,9 +14,9 @@ import { useI18n } from '@/lib/i18n';
 type Purchase = { _id: string; book?: { _id: string; title: string; coverImage?: string; category?: string }; amount: number; currency: string; status: string; paidAt?: string; createdAt: string };
 
 const dashboardCopy = {
-  en: { heading: 'Your learning dashboard', intro: 'Premium books and verified payments stay connected to this account.', library: 'Purchased books', empty: 'You have no verified premium books yet.', explore: 'Explore the library', read: 'Read book', history: 'Payment history', secure: 'Payments are completed securely by our payment partner. Isoko y’Ubworozi never stores your card number or mobile-money PIN.' },
-  rw: { heading: 'Ahantu hawe ho kwigira', intro: 'Ibitabo wishyuye n’ubwishyu bwemejwe bihuzwa n’iyi konti.', library: 'Ibitabo waguze', empty: 'Nta gitabo cyishyurwa cyemejwe uragura.', explore: 'Sura isomero', read: 'Soma igitabo', history: 'Amateka y’ubwishyu', secure: 'Ubwishyu bukorwa n’umufatanyabikorwa wizewe. Isoko y’Ubworozi ntibika nomero ya karita cyangwa PIN ya mobile money.' },
-  fr: { heading: 'Votre espace d’apprentissage', intro: 'Vos livres premium et paiements vérifiés restent liés à ce compte.', library: 'Livres achetés', empty: 'Vous n’avez pas encore de livre premium vérifié.', explore: 'Explorer la bibliothèque', read: 'Lire le livre', history: 'Historique des paiements', secure: 'Les paiements sont traités par notre partenaire sécurisé. Isoko y’Ubworozi ne stocke jamais votre numéro de carte ni votre code mobile money.' },
+  en: { heading: 'Your learning dashboard', intro: 'Premium books and verified payments stay connected to this account.', library: 'Purchased books', empty: 'You have no verified premium books yet.', explore: 'Explore the library', read: 'Read book', history: 'Payment history', secure: 'Pay from your own MTN or Airtel wallet. We never ask for or store your mobile-money PIN.' },
+  rw: { heading: 'Ahantu hawe ho kwigira', intro: 'Ibitabo wishyuye n’ubwishyu bwemejwe bihuzwa n’iyi konti.', library: 'Ibitabo waguze', empty: 'Nta gitabo cyishyurwa cyemejwe uragura.', explore: 'Sura isomero', read: 'Soma igitabo', history: 'Amateka y’ubwishyu', secure: 'Ishyura ukoresheje MTN cyangwa Airtel yawe. Ntidusaba kandi ntitubika PIN ya mobile money.' },
+  fr: { heading: 'Votre espace d’apprentissage', intro: 'Vos livres premium et paiements vérifiés restent liés à ce compte.', library: 'Livres achetés', empty: 'Vous n’avez pas encore de livre premium vérifié.', explore: 'Explorer la bibliothèque', read: 'Lire le livre', history: 'Historique des paiements', secure: 'Payez depuis votre portefeuille MTN ou Airtel. Nous ne demandons et ne stockons jamais votre code secret mobile money.' },
 };
 
 export default function AccountPage() {
@@ -42,7 +42,10 @@ export default function AccountPage() {
       const next = new URLSearchParams(window.location.search).get('next');
       if (next?.startsWith('/') && !next.startsWith('//')) window.location.assign(next);
     } catch (requestError) {
-      setError(axios.isAxiosError(requestError) ? requestError.response?.data?.message || t('account.error') : t('account.error'));
+      const responseCode = axios.isAxiosError(requestError) ? requestError.response?.data?.code : undefined;
+      const responseMessage = axios.isAxiosError(requestError) ? requestError.response?.data?.message : undefined;
+      if (responseCode === 'EMAIL_EXISTS') setMode('login');
+      setError(responseMessage || t('account.error'));
     } finally { setLoading(false); }
   };
 
@@ -72,7 +75,7 @@ export default function AccountPage() {
               {purchase.book?.coverImage && <div className="relative h-24 w-[4.5rem] shrink-0 overflow-hidden rounded-lg bg-isoko-light"><Image fill sizes="72px" src={purchase.book.coverImage} alt="" className="object-cover" /></div>}
               <div className="min-w-0"><p className="text-[10px] font-black uppercase tracking-wider text-isoko-accent">{purchase.book?.category}</p><h3 className="mt-1 line-clamp-2 text-sm font-bold text-isoko-dark">{purchase.book?.title}</h3><button onClick={() => purchase.book && readBook(purchase.book._id)} className="mt-3 text-xs font-extrabold text-isoko-primary"><i className="fa-solid fa-book-open mr-1.5" />{words.read}</button></div>
             </article>)}</div> : <div className="mt-7 rounded-2xl bg-[#f5faf6] p-7 text-center"><i className="fa-solid fa-book-open mb-3 text-2xl text-isoko-accent" /><p className="text-sm font-bold text-slate-600">{words.empty}</p><Link href="/books" className="mt-4 inline-flex text-sm font-extrabold text-isoko-primary">{words.explore}</Link></div>}
-            {purchases.length > 0 && <div className="mt-8"><h3 className="text-sm font-extrabold text-isoko-dark">{words.history}</h3><div className="mt-3 space-y-2">{purchases.map((purchase) => <div key={`history-${purchase._id}`} className="flex items-center justify-between gap-4 rounded-xl bg-[#f7faf8] px-4 py-3 text-xs"><span className="min-w-0 truncate font-bold text-slate-600">{purchase.book?.title || 'Book'}</span><span className={`shrink-0 rounded-full px-2 py-1 font-black ${purchase.status === 'successful' ? 'bg-emerald-100 text-emerald-800' : purchase.status === 'pending' ? 'bg-amber-100 text-amber-800' : 'bg-red-100 text-red-700'}`}>{purchase.status}</span></div>)}</div></div>}
+            {purchases.length > 0 && <div className="mt-8"><h3 className="text-sm font-extrabold text-isoko-dark">{words.history}</h3><div className="mt-3 space-y-2">{purchases.map((purchase) => <div key={`history-${purchase._id}`} className="flex items-center justify-between gap-4 rounded-xl bg-[#f7faf8] px-4 py-3 text-xs"><span className="min-w-0 truncate font-bold text-slate-600">{purchase.book?.title || 'Book'}</span><span className={`shrink-0 rounded-full px-2 py-1 font-black ${purchase.status === 'successful' ? 'bg-emerald-100 text-emerald-800' : purchase.status === 'pending' ? 'bg-amber-100 text-amber-800' : purchase.status === 'pin_issued' ? 'bg-blue-100 text-blue-800' : 'bg-red-100 text-red-700'}`}>{purchase.status.replace('_', ' ')}</span></div>)}</div></div>}
           </div>
         </div> : <div className="rounded-3xl border border-isoko-dark/8 bg-white p-7 shadow-[0_20px_70px_rgba(6,59,31,.08)] sm:p-9">
           <div className="mb-7 grid grid-cols-3 gap-2 text-center text-[10px] font-black uppercase tracking-wider text-slate-500"><span><i className="fa-solid fa-user-lock mb-2 block text-lg text-isoko-accent" />Account</span><span><i className="fa-solid fa-credit-card mb-2 block text-lg text-isoko-accent" />Payment</span><span><i className="fa-solid fa-book-open mb-2 block text-lg text-isoko-accent" />Access</span></div>
