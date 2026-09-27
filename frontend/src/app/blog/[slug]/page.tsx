@@ -59,6 +59,7 @@ export async function generateMetadata({
       "ubuzima bw'inkoko",
     ],
     alternates: { canonical: `${site}/blog/${article.slug}` },
+    robots: { index: true, follow: true },
     openGraph: {
       type: 'article',
       url: `${site}/blog/${article.slug}`,
@@ -69,6 +70,7 @@ export async function generateMetadata({
       modifiedTime: article.updatedAt,
       authors: [article.author],
     },
+    twitter: { card: 'summary_large_image', title: article.title, description, images: [article.image] },
   };
 }
 
@@ -84,24 +86,20 @@ export default async function ArticlePage({
   const articleUrl = `${site}/blog/${article.slug}`;
   const schema = {
     '@context': 'https://schema.org',
-    '@type': 'Article',
-    headline: article.title,
-    description: plain(article.content).slice(0, 200),
-    image: [article.image],
-    datePublished: article.createdAt,
-    dateModified: article.updatedAt,
-    author: { '@type': 'Person', name: article.author },
-    publisher: {
-      '@type': 'Organization',
-      name: "Isoko y'Ubworozi",
-      url: site,
-    },
-    mainEntityOfPage: {
-      '@type': 'WebPage',
-      '@id': articleUrl,
-    },
-    url: articleUrl,
-    inLanguage: 'rw',
+    '@graph': [{
+      '@type': 'Article', '@id': `${articleUrl}#article`, headline: article.title,
+      description: plain(article.content).slice(0, 200), image: [article.image],
+      datePublished: article.createdAt, dateModified: article.updatedAt,
+      author: { '@type': 'Person', name: article.author },
+      publisher: { '@type': 'Organization', name: "Isoko y'Ubworozi", url: site },
+      mainEntityOfPage: { '@type': 'WebPage', '@id': articleUrl }, url: articleUrl, inLanguage: 'rw',
+    }, {
+      '@type': 'BreadcrumbList', '@id': `${articleUrl}#breadcrumb`, itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Home', item: site },
+        { '@type': 'ListItem', position: 2, name: 'Articles', item: `${site}/blog` },
+        { '@type': 'ListItem', position: 3, name: article.title, item: articleUrl },
+      ],
+    }],
   };
 
   return (
@@ -152,7 +150,7 @@ export default async function ArticlePage({
       </article>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(schema).replace(/</g, '\\u003c') }}
       />
       <Footer />
     </main>

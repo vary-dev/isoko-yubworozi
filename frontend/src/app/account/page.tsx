@@ -7,16 +7,16 @@ import { useEffect, useState } from 'react';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 import PageHero from '@/components/ui/PageHero';
-import { fetchBookAccess, fetchMyPurchases, loginUser, registerUser } from '@/lib/api';
+import { fetchBookAccess, fetchMyPurchases, loginUser, registerUser, updateUserProfile } from '@/lib/api';
 import { clearSession, getSession, saveSession, type Session } from '@/lib/session';
 import { useI18n } from '@/lib/i18n';
 
 type Purchase = { _id: string; book?: { _id: string; title: string; coverImage?: string; category?: string }; amount: number; currency: string; status: string; paidAt?: string; createdAt: string };
 
 const dashboardCopy = {
-  en: { heading: 'Your learning dashboard', intro: 'Premium books and verified payments stay connected to this account.', library: 'Purchased books', empty: 'You have no verified premium books yet.', explore: 'Explore the library', read: 'Read book', history: 'Payment history', secure: 'Pay from your own MTN or Airtel wallet. We never ask for or store your mobile-money PIN.' },
-  rw: { heading: 'Ahantu hawe ho kwigira', intro: 'Ibitabo wishyuye n’ubwishyu bwemejwe bihuzwa n’iyi konti.', library: 'Ibitabo waguze', empty: 'Nta gitabo cyishyurwa cyemejwe uragura.', explore: 'Sura isomero', read: 'Soma igitabo', history: 'Amateka y’ubwishyu', secure: 'Ishyura ukoresheje MTN cyangwa Airtel yawe. Ntidusaba kandi ntitubika PIN ya mobile money.' },
-  fr: { heading: 'Votre espace d’apprentissage', intro: 'Vos livres premium et paiements vérifiés restent liés à ce compte.', library: 'Livres achetés', empty: 'Vous n’avez pas encore de livre premium vérifié.', explore: 'Explorer la bibliothèque', read: 'Lire le livre', history: 'Historique des paiements', secure: 'Payez depuis votre portefeuille MTN ou Airtel. Nous ne demandons et ne stockons jamais votre code secret mobile money.' },
+  en: { heading: 'Your learning dashboard', intro: 'Premium books and verified payments stay connected to this account.', library: 'Purchased books', empty: 'You have no verified premium books yet.', explore: 'Explore the library', read: 'Read book', history: 'Payment history', secure: 'Pay from your own MTN or Airtel wallet. We never ask for or store your mobile-money PIN.', photo: 'Profile photo', photoHint: 'Add a clear JPG, PNG or WebP image (maximum 8 MB).', savePhoto: 'Save profile', saved: 'Profile updated successfully.' },
+  rw: { heading: 'Ahantu hawe ho kwigira', intro: 'Ibitabo wishyuye n’ubwishyu bwemejwe bihuzwa n’iyi konti.', library: 'Ibitabo waguze', empty: 'Nta gitabo cyishyurwa cyemejwe uragura.', explore: 'Sura isomero', read: 'Soma igitabo', history: 'Amateka y’ubwishyu', secure: 'Ishyura ukoresheje MTN cyangwa Airtel yawe. Ntidusaba kandi ntitubika PIN ya mobile money.', photo: 'Ifoto y’umwirondoro', photoHint: 'Shyiraho ifoto ya JPG, PNG cyangwa WebP itarengeje 8 MB.', savePhoto: 'Bika umwirondoro', saved: 'Umwirondoro wavuguruwe neza.' },
+  fr: { heading: 'Votre espace d’apprentissage', intro: 'Vos livres premium et paiements vérifiés restent liés à ce compte.', library: 'Livres achetés', empty: 'Vous n’avez pas encore de livre premium vérifié.', explore: 'Explorer la bibliothèque', read: 'Lire le livre', history: 'Historique des paiements', secure: 'Payez depuis votre portefeuille MTN ou Airtel. Nous ne demandons et ne stockons jamais votre code secret mobile money.', photo: 'Photo de profil', photoHint: 'Ajoutez une image JPG, PNG ou WebP nette (8 Mo maximum).', savePhoto: 'Enregistrer le profil', saved: 'Profil mis à jour.' },
 };
 
 export default function AccountPage() {
@@ -26,6 +26,8 @@ export default function AccountPage() {
   const [session, setSession] = useState<Session | null>(null);
   const [purchases, setPurchases] = useState<Purchase[]>([]);
   const [loading, setLoading] = useState(false);
+  const [profileLoading, setProfileLoading] = useState(false);
+  const [profileMessage, setProfileMessage] = useState('');
   const [error, setError] = useState('');
 
   const loadPurchases = () => fetchMyPurchases().then((response) => setPurchases(response.data)).catch(() => setPurchases([]));
@@ -54,6 +56,18 @@ export default function AccountPage() {
     catch { setError(t('account.error')); }
   };
   const logout = () => { clearSession(); setSession(null); setPurchases([]); };
+  const updateProfile = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!session) return;
+    setProfileLoading(true); setError(''); setProfileMessage('');
+    try {
+      const response = await updateUserProfile(new FormData(event.currentTarget));
+      const nextSession = { ...session, ...response.data, token: session.token };
+      saveSession(nextSession); setSession(nextSession); setProfileMessage(words.saved);
+    } catch (requestError) {
+      setError(axios.isAxiosError(requestError) ? requestError.response?.data?.message || t('account.error') : t('account.error'));
+    } finally { setProfileLoading(false); }
+  };
   const successful = purchases.filter((purchase) => purchase.status === 'successful');
 
   return <main id="main-content">
@@ -63,10 +77,18 @@ export default function AccountPage() {
       <div className={`mx-auto w-[min(100%-2.5rem,72rem)] ${session ? '' : 'max-w-xl'}`}>
         {session ? <div className="grid gap-6 lg:grid-cols-[.72fr_1.28fr]">
           <aside className="h-fit rounded-3xl border border-isoko-dark/8 bg-isoko-dark p-7 text-white shadow-[0_20px_70px_rgba(6,59,31,.12)] sm:p-9">
-            <span className="grid h-14 w-14 place-items-center rounded-2xl bg-white/10 text-xl"><i className="fa-solid fa-user-check" /></span>
+            <div className="relative h-20 w-20 overflow-hidden rounded-2xl border border-white/15 bg-white/10 text-xl">
+              {session.avatar ? <Image fill sizes="80px" src={session.avatar} alt={`${session.name} profile`} className="object-cover" /> : <span className="grid h-full w-full place-items-center font-black text-isoko-light">{session.name.slice(0, 2).toUpperCase()}</span>}
+            </div>
             <p className="mt-6 text-xs font-extrabold uppercase tracking-[.16em] text-isoko-light">{t('account.member')}</p>
             <h2 className="mt-2 text-2xl font-bold">{session.name}</h2><p className="mt-1 text-sm text-white/65">{session.email}</p>
             <p className="mt-6 rounded-2xl bg-white/8 p-4 text-sm leading-6 text-white/75"><i className="fa-solid fa-shield-halved mr-2 text-isoko-light" />{words.secure}</p>
+            <form onSubmit={updateProfile} className="mt-6 rounded-2xl border border-white/10 bg-white/5 p-4">
+              <label className="block text-xs font-extrabold text-white">{words.photo}<input required name="avatar" type="file" accept="image/jpeg,image/png,image/webp" className="mt-2 block w-full text-xs text-white/65 file:mr-3 file:rounded-lg file:border-0 file:bg-white/10 file:px-3 file:py-2 file:font-bold file:text-white" /></label>
+              <p className="mt-2 text-[11px] leading-5 text-white/55">{words.photoHint}</p>
+              {profileMessage && <p role="status" className="mt-3 text-xs font-bold text-isoko-light">{profileMessage}</p>}
+              <button disabled={profileLoading} className="mt-3 min-h-10 w-full rounded-xl bg-white px-4 text-xs font-extrabold text-isoko-dark disabled:opacity-60">{profileLoading ? t('account.loading') : words.savePhoto}</button>
+            </form>
             <button onClick={logout} className="mt-6 min-h-11 rounded-xl border border-white/15 px-5 text-sm font-bold hover:bg-white/10">{t('account.logout')}</button>
           </aside>
           <div className="rounded-3xl border border-isoko-dark/8 bg-white p-6 shadow-[0_20px_70px_rgba(6,59,31,.07)] sm:p-9">

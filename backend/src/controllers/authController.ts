@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import User from '../models/User';
+import { AuthRequest } from '../middleware/auth';
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -17,6 +18,7 @@ const publicUser = (user: any) => ({
   name: user.name,
   email: user.email,
   role: user.role,
+  avatar: user.avatar || '',
   token: generateToken(user._id.toString(), user.role),
 });
 
@@ -130,5 +132,35 @@ export const getMe = async (req: Request, res: Response) => {
     res.json(user);
   } catch (error) {
     res.status(500).json({ message: 'Error fetching user', error });
+  }
+};
+
+/**
+ * @desc    Update the signed-in user's public profile
+ * @route   PUT /api/auth/profile
+ */
+export const updateProfile = async (req: AuthRequest, res: Response) => {
+  try {
+    const user = await User.findById(req.user?.id);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    const name = typeof req.body.name === 'string' ? req.body.name.trim() : '';
+    if (req.body.name !== undefined && name.length < 2) {
+      return res.status(400).json({ message: 'Name must contain at least 2 characters' });
+    }
+
+    if (name) user.name = name;
+    if (req.file?.path) user.avatar = req.file.path;
+    await user.save();
+
+    res.json({
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      avatar: user.avatar || '',
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Could not update profile', error });
   }
 };

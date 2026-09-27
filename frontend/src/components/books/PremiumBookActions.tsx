@@ -48,7 +48,6 @@ export default function PremiumBookActions({ bookId, price }: { bookId: string; 
   const [signedIn, setSignedIn] = useState(false);
   const [owned, setOwned] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [open, setOpen] = useState(false);
   const [method, setMethod] = useState<PaymentMethod>('mtn');
   const [payerPhone, setPayerPhone] = useState('');
   const [purchase, setPurchase] = useState<Purchase | null>(null);
@@ -63,7 +62,7 @@ export default function PremiumBookActions({ bookId, price }: { bookId: string; 
       if (!session) { setLoading(false); return; }
       fetchBookPaymentStatus(bookId).then((response) => {
         setOwned(Boolean(response.data.owned));
-        if (response.data.purchase && !response.data.owned) { setPurchase(response.data.purchase); setOpen(true); }
+        if (response.data.purchase && !response.data.owned) setPurchase(response.data.purchase);
       }).catch(() => undefined).finally(() => setLoading(false));
     });
     return () => cancelAnimationFrame(frame);
@@ -85,7 +84,7 @@ export default function PremiumBookActions({ bookId, price }: { bookId: string; 
     try {
       const response = await createManualBookPayment({ bookId, paymentMethod: method, payerPhone });
       if (response.data.alreadyOwned) { setOwned(true); return; }
-      setPurchase(response.data.purchase); setOpen(true);
+      setPurchase(response.data.purchase);
     } catch (requestError) { setError(message(requestError)); } finally { setLoading(false); }
   };
 
@@ -94,7 +93,7 @@ export default function PremiumBookActions({ bookId, price }: { bookId: string; 
     setLoading(true); setError('');
     try {
       const response = await verifyBookPaymentPin(purchase._id, pin);
-      if (response.data.verified) { setOwned(true); setOpen(false); }
+      if (response.data.verified) setOwned(true);
     } catch (requestError) { setError(message(requestError)); } finally { setLoading(false); }
   };
 
@@ -105,13 +104,15 @@ export default function PremiumBookActions({ bookId, price }: { bookId: string; 
   };
 
   if (loading && !signedIn) return <p className="text-sm font-bold text-slate-500">{words.checking}</p>;
-  if (!signedIn) return <Link href={`/account?next=${encodeURIComponent(`/books/${bookId}`)}`} className="inline-flex items-center gap-2 rounded-xl bg-isoko-dark px-6 py-3.5 text-sm font-extrabold text-white transition hover:bg-isoko-primary"><i className="fa-solid fa-user-lock" />{words.signIn}</Link>;
+  if (!signedIn) return <section className="max-w-2xl overflow-hidden rounded-3xl border border-isoko-dark/10 bg-white shadow-[0_18px_55px_rgba(6,59,31,.09)]">
+    <header className="bg-isoko-dark p-5 text-white sm:p-6"><p className="text-[10px] font-black uppercase tracking-[.18em] text-isoko-light">MTN MoMo · Airtel Money</p><h2 className="mt-2 text-xl font-bold">{words.title}</h2><p className="mt-2 max-w-lg text-xs leading-5 text-white/70">{words.body}</p></header>
+    <div className="p-5 sm:p-6"><div className="grid gap-3 sm:grid-cols-3"><div className="rounded-2xl bg-[#f5faf6] p-4"><i className="fa-solid fa-user-plus text-isoko-accent" /><p className="mt-2 text-xs font-extrabold text-isoko-dark">1. {words.signIn}</p></div><div className="rounded-2xl bg-[#f5faf6] p-4"><i className="fa-solid fa-mobile-screen-button text-isoko-accent" /><p className="mt-2 text-xs font-extrabold text-isoko-dark">2. {price.toLocaleString()} RWF → {ADMIN_NUMBER}</p></div><div className="rounded-2xl bg-[#f5faf6] p-4"><i className="fa-solid fa-key text-isoko-accent" /><p className="mt-2 text-xs font-extrabold text-isoko-dark">3. {words.pin}</p></div></div><Link href={`/account?next=${encodeURIComponent(`/books/${bookId}`)}`} className="mt-5 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-isoko-accent px-6 py-3.5 text-sm font-extrabold text-white transition hover:bg-isoko-primary"><i className="fa-solid fa-user-lock" />{words.signIn}</Link></div>
+  </section>;
   if (owned) return <div><button type="button" disabled={loading} onClick={read} className="inline-flex min-h-12 items-center gap-2 rounded-xl bg-isoko-accent px-6 py-3 text-sm font-extrabold text-white"><i className="fa-solid fa-book-open" />{loading ? words.checking : words.owned}</button>{error && <p className="mt-3 text-sm font-bold text-red-700">{error}</p>}</div>;
 
   return <div className="max-w-2xl">
-    {!open && <button type="button" onClick={() => setOpen(true)} className="inline-flex min-h-12 items-center gap-2 rounded-xl bg-isoko-dark px-6 py-3 text-sm font-extrabold text-white transition hover:bg-isoko-primary"><i className="fa-solid fa-mobile-screen-button" />{words.start} — {price.toLocaleString()} RWF</button>}
-    {open && <section className="overflow-hidden rounded-3xl border border-isoko-dark/10 bg-white shadow-[0_18px_55px_rgba(6,59,31,.09)]">
-      <header className="bg-isoko-dark p-5 text-white sm:p-6"><div className="flex items-start justify-between gap-4"><div><p className="text-[10px] font-black uppercase tracking-[.18em] text-isoko-light">MTN MoMo · Airtel Money</p><h2 className="mt-2 text-xl font-bold">{words.title}</h2><p className="mt-2 max-w-lg text-xs leading-5 text-white/65">{words.body}</p></div>{!purchase && <button type="button" aria-label="Close" onClick={() => setOpen(false)} className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-white/10"><i className="fa-solid fa-xmark" /></button>}</div></header>
+    <section className="overflow-hidden rounded-3xl border border-isoko-dark/10 bg-white shadow-[0_18px_55px_rgba(6,59,31,.09)]">
+      <header className="bg-isoko-dark p-5 text-white sm:p-6"><p className="text-[10px] font-black uppercase tracking-[.18em] text-isoko-light">MTN MoMo · Airtel Money</p><h2 className="mt-2 text-xl font-bold">{words.title}</h2><p className="mt-2 max-w-lg text-xs leading-5 text-white/70">{words.body}</p></header>
       {!purchase ? <form onSubmit={createRequest} className="space-y-5 p-5 sm:p-6">
         <fieldset><legend className="text-xs font-extrabold text-isoko-dark">{words.method}</legend><div className="mt-3 grid grid-cols-2 gap-3">{(['mtn', 'airtel'] as PaymentMethod[]).map((option) => <button key={option} type="button" onClick={() => setMethod(option)} className={`rounded-2xl border p-4 text-left transition ${method === option ? 'border-isoko-accent bg-isoko-light/60 ring-2 ring-isoko-accent/15' : 'border-isoko-dark/10'}`}><span className={`grid h-9 w-9 place-items-center rounded-xl text-xs font-black ${option === 'mtn' ? 'bg-[#ffcb05] text-black' : 'bg-red-600 text-white'}`}>{option === 'mtn' ? 'MTN' : 'AIR'}</span><span className="mt-3 block text-xs font-extrabold text-isoko-dark">{option === 'mtn' ? 'MTN MoMo' : 'Airtel Money'}</span></button>)}</div></fieldset>
         <label className="block text-xs font-extrabold text-isoko-dark">{words.phone}<input required inputMode="tel" value={payerPhone} onChange={(event) => setPayerPhone(event.target.value)} placeholder="078… / 073…" className="mt-2 w-full rounded-xl border border-isoko-dark/10 px-4 py-3 text-sm outline-none focus:border-isoko-accent" /></label>
@@ -123,6 +124,6 @@ export default function PremiumBookActions({ bookId, price }: { bookId: string; 
         <div className="mt-5 rounded-2xl bg-amber-50 p-4"><p className="text-xs font-extrabold text-amber-900"><i className="fa-solid fa-clock mr-2" />{purchase.status === 'pin_issued' ? (countdown && secondsLeft ? `${words.expires} ${countdown}` : words.expired) : words.waiting}</p><p className="mt-1 text-xs leading-5 text-amber-800">{words.waitingBody}</p></div>
         <form onSubmit={verifyPin} className="mt-5"><label className="text-xs font-extrabold text-isoko-dark">{words.pin}<input required inputMode="numeric" pattern="[0-9]{6}" maxLength={6} value={pin} onChange={(event) => setPin(event.target.value.replace(/\D/g, ''))} placeholder="••••••" className="mt-2 w-full rounded-xl border border-isoko-dark/10 px-4 py-3 text-center text-xl font-black tracking-[.4em] outline-none focus:border-isoko-accent" /></label><p className="mt-3 text-[11px] leading-5 text-red-700"><i className="fa-solid fa-shield-halved mr-1.5" />{words.noPin}</p>{error && <p role="alert" className="mt-3 rounded-xl bg-red-50 p-3 text-xs font-bold text-red-700">{error}</p>}<button disabled={loading || pin.length !== 6 || secondsLeft === 0} className="mt-4 min-h-12 w-full rounded-xl bg-isoko-dark px-5 text-sm font-extrabold text-white disabled:opacity-50">{loading ? words.checking : words.verify}</button></form>
       </div>}
-    </section>}
+    </section>
   </div>;
 }

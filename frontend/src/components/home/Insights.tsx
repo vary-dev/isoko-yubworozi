@@ -36,6 +36,7 @@ export default function Insights() {
       day: "numeric",
       year: "numeric",
     });
+  const excerpt = (html: string) => html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
 
   return (
     <section className="py-20 bg-gray-50/60">
@@ -74,8 +75,9 @@ export default function Insights() {
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ delay: idx * 0.08, duration: 0.4 }}
                 viewport={{ once: true }}
-                className="bg-white rounded-xl border border-gray-100 overflow-hidden group hover:shadow-lg transition-all"
+                className="min-w-0"
               >
+                <Link href={`/blog/${article.slug}`} aria-label={article.title} className="group block h-full overflow-hidden rounded-2xl border border-isoko-dark/8 bg-white transition-all hover:-translate-y-1 hover:border-isoko-accent/30 hover:shadow-[0_18px_50px_rgba(6,59,31,.1)]">
                 <div className="relative aspect-[16/10] overflow-hidden bg-gray-100">
                   {article.image ? (
                     <Image fill sizes="(max-width: 768px) 100vw, 33vw"
@@ -102,10 +104,12 @@ export default function Insights() {
                   <h4 className="text-[15px] font-bold text-isoko-dark leading-snug group-hover:text-isoko-primary transition line-clamp-2">
                     {article.title}
                   </h4>
-                  <p className="text-gray-400 text-sm mt-2 line-clamp-2 leading-relaxed">
-                    {article.content}
+                  <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-slate-500">
+                    {excerpt(article.content)}
                   </p>
+                  <span className="mt-4 inline-flex items-center gap-2 text-xs font-extrabold text-isoko-primary">{t("blog.read")}<i className="fa-solid fa-arrow-right text-[10px] transition group-hover:translate-x-1" /></span>
                 </div>
+                </Link>
               </motion.div>
             ))}
           </div>

@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import LanguageSwitcher from "./LanguageSwitcher";
 import { useI18n } from "@/lib/i18n";
 import Image from "next/image";
+import { clearSession, getSession, type Session } from "@/lib/session";
 
 const navLinks = [
   { key: "nav.home" as const, href: "/" },
@@ -21,6 +22,7 @@ export default function Navbar() {
   const { t } = useI18n();
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [session, setSession] = useState<Session | null>(null);
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 50);
@@ -33,6 +35,22 @@ export default function Navbar() {
     document.body.style.overflow = mobileOpen ? "hidden" : "";
     return () => { document.body.style.overflow = ""; };
   }, [mobileOpen]);
+
+  useEffect(() => {
+    const syncSession = () => setSession(getSession());
+    const frame = requestAnimationFrame(syncSession);
+    window.addEventListener("isoko-session-change", syncSession);
+    return () => {
+      cancelAnimationFrame(frame);
+      window.removeEventListener("isoko-session-change", syncSession);
+    };
+  }, []);
+
+  const logout = () => {
+    clearSession();
+    setSession(null);
+    setMobileOpen(false);
+  };
 
   return (
     <nav aria-label="Primary navigation"
@@ -72,10 +90,12 @@ export default function Navbar() {
             href="/account"
             aria-label={t("nav.account")}
             title={t("nav.account")}
-            className={`grid h-10 w-10 place-items-center rounded-xl border transition hover:-translate-y-0.5 hover:border-isoko-accent hover:text-isoko-accent ${isScrolled || mobileOpen ? "border-black/10 bg-white text-isoko-dark" : "border-white/20 bg-white/10 text-white backdrop-blur-xl"}`}
+            className={`grid h-10 w-10 place-items-center overflow-hidden rounded-xl border transition hover:-translate-y-0.5 hover:border-isoko-accent hover:text-isoko-accent ${isScrolled || mobileOpen ? "border-black/10 bg-white text-isoko-dark" : "border-white/20 bg-white/10 text-white backdrop-blur-xl"}`}
           >
-            <i aria-hidden="true" className="fa-regular fa-user" />
+            {session?.avatar ? <Image src={session.avatar} alt="" width={40} height={40} className="h-full w-full object-cover" /> : session ? <span className="text-xs font-black">{session.name.slice(0, 2).toUpperCase()}</span> : <i aria-hidden="true" className="fa-regular fa-user" />}
           </Link>
+
+          {session && <button type="button" onClick={logout} title={t("account.logout")} aria-label={t("account.logout")} className={`hidden h-10 items-center gap-2 rounded-xl border px-3 text-[11px] font-black uppercase tracking-wider transition lg:flex ${isScrolled ? "border-black/10 bg-white text-isoko-dark" : "border-white/20 bg-white/10 text-white"}`}><i className="fa-solid fa-arrow-right-from-bracket" />{t("account.logout")}</button>}
 
           <a
             href="https://youtube.com/@Isokoyubworozi"
@@ -158,9 +178,11 @@ export default function Navbar() {
                 ))}
               </div>
               <div className="p-6 border-t border-gray-100">
-                <Link href="/account" onClick={() => setMobileOpen(false)} className="mb-3 flex items-center justify-center gap-2 rounded-lg border border-isoko-dark/10 py-3 text-xs font-black uppercase tracking-wider text-isoko-dark">
-                  <i className="fa-regular fa-user" />{t("nav.account")}
+                <Link href="/account" onClick={() => setMobileOpen(false)} className="mb-3 flex items-center gap-3 rounded-xl border border-isoko-dark/10 p-3 text-isoko-dark">
+                  <span className="relative grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-xl bg-isoko-light text-xs font-black text-isoko-primary">{session?.avatar ? <Image fill sizes="40px" src={session.avatar} alt="" className="object-cover" /> : session ? session.name.slice(0, 2).toUpperCase() : <i className="fa-regular fa-user" />}</span>
+                  <span className="min-w-0 text-left"><span className="block truncate text-xs font-black">{session?.name || t("nav.account")}</span>{session && <span className="block truncate text-[10px] text-slate-500">{session.email}</span>}</span>
                 </Link>
+                {session && <button type="button" onClick={logout} className="mb-3 flex w-full items-center justify-center gap-2 rounded-lg border border-red-200 py-3 text-xs font-black uppercase tracking-wider text-red-700"><i className="fa-solid fa-arrow-right-from-bracket" />{t("account.logout")}</button>}
                 <a
                   href="https://youtube.com/@Isokoyubworozi"
                   target="_blank"

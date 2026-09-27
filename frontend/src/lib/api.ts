@@ -21,6 +21,7 @@ export type VideoSort = 'latest' | 'popular' | 'old';
 export const fetchLatestYouTubeVideos = (limit = 12, sort: VideoSort = 'latest') => api.get('/youtube/latest', { params: { limit, sort } });
 export const registerUser = (data: { name: string; email: string; password: string }) => api.post('/auth/register', data);
 export const loginUser = (data: { email: string; password: string }) => api.post('/auth/login', data);
+export const updateUserProfile = (data: FormData) => api.put('/auth/profile', data);
 export const fetchMyPurchases = () => api.get('/payments/me');
 export const createManualBookPayment = (data: { bookId: string; paymentMethod: 'mtn' | 'airtel'; payerPhone: string }) => api.post('/payments/request', data);
 export const verifyBookPaymentPin = (purchaseId: string, pin: string) => api.post('/payments/verify-pin', { purchaseId, pin });
