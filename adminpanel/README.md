@@ -13,6 +13,19 @@ npm run dev
 The application uses the production API at
 `https://isoko-yubworozi.onrender.com/api`.
 
+## Netlify deployment
+
+The checked-in `netlify.toml` tells Netlify to build the application with
+Next.js and publish the `.next` output through Netlify's Next.js runtime. Keep
+the site's base directory set to this project directory when it is deployed
+from a larger repository.
+
+Netlify should use these settings:
+
+- Build command: `npm run build`
+- Publish directory: `.next`
+- Node.js version: `22`
+
 ## Vercel deployment
 
 Create this as a separate Vercel project with these settings:
