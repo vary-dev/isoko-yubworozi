@@ -1,5 +1,8 @@
 import axios from 'axios';
-export const API_URL = 'https://isoko-yubworozi.onrender.com/api';
+// Keep browser requests on the admin site's origin. The route handler under
+// /api forwards them to the backend without a browser Origin header, avoiding
+// backend CORS failures for Netlify deploy previews and custom domains.
+export const API_URL = '/api';
 const API = axios.create({ baseURL: API_URL, timeout: 20000 });
 API.interceptors.request.use((config) => { const token = typeof window !== 'undefined' ? sessionStorage.getItem('admin_token') : null; if (token) config.headers.Authorization = `Bearer ${token}`; return config; });
 API.interceptors.response.use((response) => response, (error) => { if ([401, 403].includes(error.response?.status) && typeof window !== 'undefined') { sessionStorage.removeItem('admin_token'); sessionStorage.removeItem('admin_user'); if (window.location.pathname.startsWith('/admin')) window.location.replace('/login'); } return Promise.reject(error); });

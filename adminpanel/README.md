@@ -10,8 +10,9 @@ npm ci
 npm run dev
 ```
 
-The application uses the production API at
-`https://isoko-yubworozi.onrender.com/api`.
+The application sends browser requests to its same-origin `/api` route. The
+route proxies requests to the production API, preventing browser CORS failures
+across production, deploy-preview, and custom-domain admin URLs.
 
 ## Netlify deployment
 
@@ -55,4 +56,5 @@ Check all of these routes after deployment:
 - `/admin/articles` — editorial workspace
 - `/admin/payments` — customer payment requests and access PINs
 
-The backend must allow the deployed admin origin in its CORS configuration.
+API requests are proxied through the admin deployment and do not require each
+admin deployment URL to be added to the backend CORS allowlist.
