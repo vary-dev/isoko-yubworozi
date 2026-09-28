@@ -21,9 +21,10 @@ export type VideoSort = 'latest' | 'popular' | 'old';
 export const fetchLatestYouTubeVideos = (limit = 12, sort: VideoSort = 'latest') => api.get('/youtube/latest', { params: { limit, sort } });
 export const registerUser = (data: { name: string; email: string; password: string }) => api.post('/auth/register', data);
 export const loginUser = (data: { email: string; password: string }) => api.post('/auth/login', data);
+export const updateUserProfile = (data: FormData) => api.put('/auth/profile', data);
 export const fetchMyPurchases = () => api.get('/payments/me');
-export const createBookCheckout = (bookId: string) => api.post('/payments/checkout', { bookId });
-export const verifyBookPayment = (transactionId: string, txRef: string) => api.get('/payments/verify', { params: { transaction_id: transactionId, tx_ref: txRef } });
+export const createManualBookPayment = (data: { bookId: string; paymentMethod: 'mtn' | 'airtel'; payerPhone: string }) => api.post('/payments/request', data);
+export const verifyBookPaymentPin = (purchaseId: string, pin: string) => api.post('/payments/verify-pin', { purchaseId, pin });
 export const fetchBookPaymentStatus = (bookId: string) => api.get(`/payments/book/${encodeURIComponent(bookId)}/status`);
 export const fetchBookAccess = (bookId: string) => api.get(`/books/${encodeURIComponent(bookId)}/access`);
 

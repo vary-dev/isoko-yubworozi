@@ -8,6 +8,7 @@ import Image from 'next/image';
 const menuItems = [
   { name: "Dashboard", icon: "fa-chart-pie", href: "/admin" },
   { name: "Farming Books", icon: "fa-book", href: "/admin/books" },
+  { name: "Payments", icon: "fa-money-check-dollar", href: "/admin/payments" },
   { name: "Blog Gazette", icon: "fa-newspaper", href: "/admin/articles" },
   { name: "YouTube Hub", icon: "fa-brands fa-youtube", href: "/admin/videos" },
   { name: "Media Library", icon: "fa-images", href: "/admin/media" },

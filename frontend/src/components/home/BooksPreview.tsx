@@ -59,7 +59,7 @@ export default function BooksPreview() {
 
         {/* Books Grid */}
         {!loading && books.length > 0 && (
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-5">
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:gap-5">
             {books.map((book, idx) => (
               <motion.div
                 key={book._id}
@@ -67,9 +67,10 @@ export default function BooksPreview() {
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ delay: idx * 0.08, duration: 0.4 }}
                 viewport={{ once: true }}
-                className="group"
+                className="min-w-0"
               >
-                <div className="aspect-[3/4] rounded-xl overflow-hidden bg-gray-100 shadow-sm mb-3 relative">
+                <Link href={`/books/${book._id}`} aria-label={`${book.title} — ${book.isPremium ? t("library.premium") : t("common.free")}`} className="group block h-full overflow-hidden rounded-2xl border border-isoko-dark/8 bg-white p-2.5 shadow-[0_8px_30px_rgba(6,59,31,.05)] transition hover:-translate-y-1 hover:border-isoko-accent/30 hover:shadow-[0_18px_45px_rgba(6,59,31,.11)] sm:p-3">
+                <div className="relative mx-auto aspect-[3/4] w-full max-w-[10rem] overflow-hidden rounded-xl bg-gray-100 shadow-sm">
                   {book.coverImage ? (
                     <Image fill sizes="(max-width: 640px) 50vw, 25vw"
                       src={book.coverImage}
@@ -87,15 +88,16 @@ export default function BooksPreview() {
                     </span>
                   )}
                 </div>
-                <span className="text-[10px] font-black uppercase text-isoko-accent tracking-wider">
+                <div className="px-1 pb-1 pt-3"><span className="text-[9px] font-black uppercase text-isoko-accent tracking-wider">
                   {book.category}
                 </span>
-                <h3 className="text-sm font-bold text-isoko-dark mt-1 line-clamp-2 group-hover:text-isoko-primary transition"><Link href={`/books/${book._id}`}>{book.title}</Link></h3>
-                <p className="text-xs text-gray-400 mt-1 font-medium">
+                <h3 className="mt-1 line-clamp-2 text-xs font-bold leading-5 text-isoko-dark transition group-hover:text-isoko-primary sm:text-sm">{book.title}</h3>
+                <div className="mt-2 flex items-center justify-between gap-2"><p className="text-[10px] font-bold text-slate-500 sm:text-xs">
                   {book.price > 0
                     ? `${book.price.toLocaleString()} RWF`
                     : t("common.free")}
-                </p>
+                </p><span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-isoko-light text-[10px] text-isoko-primary transition group-hover:bg-isoko-accent group-hover:text-white"><i className="fa-solid fa-arrow-right" /></span></div></div>
+                </Link>
               </motion.div>
             ))}
           </div>

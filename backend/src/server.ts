@@ -22,6 +22,7 @@ const app = express();
 const allowedOrigins = new Set(
   [
     'https://isokoyubworozi.vercel.app',
+    'https://isoko-yubworozi-admin.vercel.app',
     'http://localhost:3000',
     'http://localhost:3001',
     process.env.CLIENT_URL,

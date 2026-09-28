@@ -19,6 +19,14 @@ export const youtubeDurationSeconds = (duration = '') => {
   return Number(match[1] || 0) * 3600 + Number(match[2] || 0) * 60 + Number(match[3] || 0);
 };
 
+export const isLikelyYouTubeShort = (duration: string, title = '', description = '') => {
+  const text = `${title} ${description}`.toLowerCase();
+  // The Data API does not provide an isShort field. Its own duration search
+  // classification treats videos below four minutes as short, so combine that
+  // boundary with the conventional #shorts metadata marker.
+  return youtubeDurationSeconds(duration) < 240 || /(^|\s)#?shorts?(\s|$|[.,!?:;-])/i.test(text);
+};
+
 export type VideoOrder = 'latest' | 'popular' | 'old';
 const orderVideos = (videos: ChannelVideo[], order: VideoOrder) => [...videos].sort((a, b) => {
   if (order === 'popular') return b.viewCount - a.viewCount;
@@ -59,9 +67,7 @@ export const getLatestChannelVideos = async (requestedLimit = 12, refresh = fals
   const videos: ChannelVideo[] = ids.flatMap((id) => {
     const item = byId.get(id);
     const durationSeconds = item ? youtubeDurationSeconds(item.contentDetails.duration) : 0;
-    // The Data API exposes no Shorts flag. Current Shorts can be up to three minutes,
-    // so duration is the safest deterministic server-side filter available.
-    if (!item || item.status?.embeddable === false || durationSeconds <= 180) return [];
+    if (!item || item.status?.embeddable === false || isLikelyYouTubeShort(item.contentDetails.duration, item.snippet.title, item.snippet.description)) return [];
     const stats = item.statistics || {};
     return [{
       id, title: item.snippet.title, description: item.snippet.description, publishedAt: item.snippet.publishedAt,

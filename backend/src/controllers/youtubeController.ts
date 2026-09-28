@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import Video from '../models/Video';
-import { getLatestChannelVideos, VideoOrder, youtubeDurationSeconds } from '../services/youtubeService';
+import { getLatestChannelVideos, isLikelyYouTubeShort, VideoOrder, youtubeDurationSeconds } from '../services/youtubeService';
 
 const legacyYouTubeId = (url: string) => url.match(/(?:v=|youtu\.be\/|embed\/|shorts\/)([\w-]{6,})/)?.[1] || '';
 
@@ -14,7 +14,7 @@ export const latestChannelVideos = async (req: Request, res: Response) => {
     const requestedOrder = String(req.query.sort || 'latest');
     const sort = requestedOrder === 'popular' ? '-viewCount' : requestedOrder === 'old' ? 'publishedAt createdAt' : '-publishedAt -createdAt';
     const fallback = await Video.find().sort(sort).limit(50);
-    const normalVideos = fallback.filter((video) => youtubeDurationSeconds(video.duration) > 180).slice(0, Math.min(Number(req.query.limit) || 12, 50));
+    const normalVideos = fallback.filter((video) => !isLikelyYouTubeShort(video.duration, video.title, video.description)).slice(0, Math.min(Number(req.query.limit) || 12, 50));
     if (normalVideos.length) return res.json({ videos: normalVideos.map((video) => { const id = video.youtubeId || legacyYouTubeId(video.youtubeUrl); return { id: id || video.id, ...video.toObject(), durationSeconds: youtubeDurationSeconds(video.duration), embedUrl: id ? `https://www.youtube-nocookie.com/embed/${id}` : '' }; }), fallback: true });
     res.status(503).json({ message: error instanceof Error ? error.message : 'YouTube videos are temporarily unavailable' });
   }

@@ -1,4 +1,4 @@
-export type Session = { _id: string; name: string; email: string; role: string; token: string };
+export type Session = { _id: string; name: string; email: string; role: string; token: string; avatar?: string };
 export const SESSION_KEY = 'isoko-session';
 
 export const getSession = (): Session | null => {

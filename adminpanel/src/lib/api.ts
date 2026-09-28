@@ -19,4 +19,7 @@ export const getMedia = () => API.get('/media');
 export const adminLogin = (data: { email: string; password: string }) => API.post('/auth/admin/login', data);
 export const registerAdmin = (data: { name: string; email: string; password: string }, setupKey: string) => API.post('/auth/admin/register', data, { headers: { 'x-admin-setup-key': setupKey } });
 export const getAdminMe = () => API.get('/auth/admin/me');
+export const getPaymentRequests = () => API.get('/payments/admin');
+export const issuePaymentPin = (id: string) => API.post(`/payments/admin/${id}/issue-pin`);
+export const rejectPaymentRequest = (id: string, reason: string) => API.post(`/payments/admin/${id}/reject`, { reason });
 export default API;

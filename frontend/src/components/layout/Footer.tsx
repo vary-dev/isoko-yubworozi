@@ -35,8 +35,7 @@ export default function Footer() {
             <p className="mb-5 text-sm leading-6 text-white/55">{t("footer.paymentBody")}</p>
             <div className="flex flex-wrap gap-3">
               <span className="inline-flex min-h-12 items-center gap-2 rounded-xl bg-[#ffcc00] px-4 font-black text-black"><span className="grid h-7 w-7 place-items-center rounded-full border-2 border-black text-[9px]">MTN</span>MoMo</span>
-              <span className="inline-flex min-h-12 items-center rounded-xl bg-white px-4 text-2xl text-[#17357c]"><i className="fa-brands fa-cc-visa" aria-label="Visa" /></span>
-              <span className="inline-flex min-h-12 items-center rounded-xl bg-white px-4 text-2xl text-[#eb001b]"><i className="fa-brands fa-cc-mastercard" aria-label="Mastercard" /></span>
+              <span className="inline-flex min-h-12 items-center gap-2 rounded-xl bg-[#e40000] px-4 font-black text-white"><span className="grid h-7 w-7 place-items-center rounded-full border-2 border-white text-[9px]">AIR</span>Airtel Money</span>
             </div>
             <p className="mt-5 flex items-center gap-2 text-xs text-white/45"><i className="fa-solid fa-lock text-isoko-accent" />{t("footer.paymentSecure")}</p>
           </div>

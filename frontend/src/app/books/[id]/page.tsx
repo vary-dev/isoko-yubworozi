@@ -49,7 +49,9 @@ export async function generateMetadata({
   return {
     title: book.title,
     description: book.description.slice(0, 160),
+    keywords: [book.title, book.category, "ibitabo by'ubworozi", 'poultry farming books', 'livres avicoles'],
     alternates: { canonical: bookUrl },
+    robots: { index: true, follow: true },
     openGraph: {
       type: 'book',
       url: bookUrl,
@@ -57,6 +59,7 @@ export async function generateMetadata({
       description: book.description,
       images: [book.coverImage],
     },
+    twitter: { card: 'summary_large_image', title: book.title, description: book.description.slice(0, 160), images: [book.coverImage] },
   };
 }
 
@@ -72,26 +75,20 @@ export default async function BookPage({
   const bookUrl = `${site}/books/${book._id}`;
   const schema = {
     '@context': 'https://schema.org',
-    '@type': 'Book',
-    '@id': bookUrl,
-    url: bookUrl,
-    name: book.title,
-    description: book.description,
-    image: book.coverImage,
-    genre: book.category,
-    inLanguage: 'rw',
-    publisher: {
-      '@type': 'Organization',
-      name: "Isoko y'Ubworozi",
-      url: site,
-    },
-    offers: {
-      '@type': 'Offer',
-      url: bookUrl,
-      price: book.price,
-      priceCurrency: 'RWF',
-      availability: 'https://schema.org/InStock',
-    },
+    '@graph': [{
+      '@type': 'Book', '@id': `${bookUrl}#book`, url: bookUrl, name: book.title,
+      description: book.description, image: book.coverImage, genre: book.category,
+      inLanguage: 'rw', datePublished: book.createdAt, dateModified: book.updatedAt,
+      isAccessibleForFree: !book.isPremium,
+      publisher: { '@type': 'Organization', name: "Isoko y'Ubworozi", url: site },
+      offers: { '@type': 'Offer', url: bookUrl, price: book.price, priceCurrency: 'RWF', availability: 'https://schema.org/InStock' },
+    }, {
+      '@type': 'BreadcrumbList', '@id': `${bookUrl}#breadcrumb`, itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Home', item: site },
+        { '@type': 'ListItem', position: 2, name: 'Library', item: `${site}/books` },
+        { '@type': 'ListItem', position: 3, name: book.title, item: bookUrl },
+      ],
+    }],
   };
 
   return (
@@ -157,7 +154,7 @@ export default async function BookPage({
       </section>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(schema).replace(/</g, '\\u003c') }}
       />
       <Footer />
     </main>
