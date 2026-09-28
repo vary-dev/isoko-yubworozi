@@ -1,4 +1,5 @@
 "use client";
+/* eslint-disable @next/next/no-img-element -- media library assets can use arbitrary remote hosts */
 import { useEffect, useState } from 'react';
 import { FiCheck, FiCopy, FiImage, FiX } from 'react-icons/fi';
 import { getMedia } from '@/lib/api';

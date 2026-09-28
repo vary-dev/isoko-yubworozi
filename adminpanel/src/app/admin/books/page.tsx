@@ -1,4 +1,5 @@
 "use client";
+/* eslint-disable @next/next/no-img-element -- book covers are user-selected remote media with arbitrary hosts */
 import { useState, useEffect } from 'react';
 import { getBooks, uploadBook, updateBook, deleteBook } from '@/lib/api';
 import { motion, AnimatePresence } from 'framer-motion';

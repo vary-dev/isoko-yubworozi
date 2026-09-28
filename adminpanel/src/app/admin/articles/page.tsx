@@ -1,4 +1,5 @@
 "use client";
+/* eslint-disable @next/next/no-img-element -- article images are user-selected remote media with arbitrary hosts */
 import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { FiCheckCircle, FiEdit3, FiImage, FiTrash2 } from 'react-icons/fi';
 import AdminPageHeader from '@/components/ui/AdminPageHeader';
