@@ -1,36 +1,45 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Isoko y'Ubworozi Admin Studio
 
-## Getting Started
+Next.js administration application for books, articles, reusable media,
+YouTube content, analytics and premium-book payment verification.
 
-First, run the development server:
+## Local development
 
 ```bash
+npm ci
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+The application uses the production API at
+`https://isoko-yubworozi.onrender.com/api`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Vercel deployment
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Create this as a separate Vercel project with these settings:
 
-## Learn More
+- Production branch: `codex`
+- Root Directory: `adminpanel`
+- Framework Preset: `Next.js`
+- Install Command: `npm ci`
+- Build Command: `npm run build`
+- Output Directory: leave empty (do not use `dist`)
 
-To learn more about Next.js, take a look at the following resources:
+The checked-in `vercel.json` also declares the Next.js framework and commands.
+Vercel must use the `adminpanel` directory as the project root for that file to
+take effect.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+After a successful production deployment, assign
+`isoko-yubworozi-admin.vercel.app` to it under **Settings → Domains**.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Production verification
 
-## Deploy on Vercel
+Check all of these routes after deployment:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- `/` — admin welcome page
+- `/login` — administrator authentication
+- `/admin` — protected dashboard
+- `/admin/books` — book management
+- `/admin/articles` — editorial workspace
+- `/admin/payments` — customer payment requests and access PINs
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+The backend must allow the deployed admin origin in its CORS configuration.
