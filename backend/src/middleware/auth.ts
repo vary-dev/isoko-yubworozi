@@ -24,6 +24,20 @@ export const protect = (req: AuthRequest, res: Response, next: NextFunction) => 
   }
 };
 
+/** Attach a valid session when present, while keeping public resources public. */
+export const optionalProtect = (req: AuthRequest, _res: Response, next: NextFunction) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader?.startsWith('Bearer ') || !process.env.JWT_SECRET) return next();
+  try {
+    const decoded = jwt.verify(authHeader.split(' ')[1]!, process.env.JWT_SECRET) as { id: string; role: string };
+    req.user = { id: decoded.id, role: decoded.role };
+  } catch {
+    // An invalid optional token must not hide free books. Premium access still
+    // fails safely because getBookAccess requires req.user.
+  }
+  next();
+};
+
 export const adminOnly = (req: AuthRequest, res: Response, next: NextFunction) => {
   if (req.user?.role !== 'admin') {
     return res.status(403).json({ message: 'Access denied. Admin only.' });

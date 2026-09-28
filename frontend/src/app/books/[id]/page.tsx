@@ -5,6 +5,7 @@ import { notFound } from 'next/navigation';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 import PremiumBookActions from '@/components/books/PremiumBookActions';
+import SaveBookButton from '@/components/books/SaveBookButton';
 
 interface Book {
   _id: string;
@@ -129,17 +130,15 @@ export default async function BookPage({
               <p className="mt-5 max-w-2xl text-base leading-8 text-slate-600">
                 {book.description}
               </p>
-              <div className="mt-8">
+              <div className="mt-8 flex flex-wrap items-start gap-3">
                 {!book.isPremium && book.fileUrl ? (
-                  <a
-                    href={book.fileUrl}
-                    target="_blank"
-                    rel="noreferrer"
+                  <Link
+                    href={`/books/${book._id}/read`}
                     className="inline-flex items-center gap-2 rounded-xl bg-isoko-accent px-6 py-3.5 text-sm font-extrabold text-white"
                   >
                     <i className="fa-solid fa-book-open" />
-                    Read free book
-                  </a>
+                    Read online for free
+                  </Link>
                 ) : book.isPremium ? (
                   <PremiumBookActions bookId={book._id} price={book.price} />
                 ) : (
@@ -147,6 +146,7 @@ export default async function BookPage({
                     File coming soon
                   </span>
                 )}
+                <SaveBookButton bookId={book._id} />
               </div>
             </div>
           </div>

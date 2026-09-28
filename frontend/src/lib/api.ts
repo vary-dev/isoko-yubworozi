@@ -24,9 +24,12 @@ export const loginUser = (data: { email: string; password: string }) => api.post
 export const updateUserProfile = (data: FormData) => api.put('/auth/profile', data);
 export const fetchMyPurchases = () => api.get('/payments/me');
 export const createManualBookPayment = (data: { bookId: string; paymentMethod: 'mtn' | 'airtel'; payerPhone: string }) => api.post('/payments/request', data);
+export const markBookPaymentSent = (purchaseId: string, data: { payerPhone: string; amount: number }) => api.post(`/payments/${purchaseId}/mark-paid`, data);
 export const verifyBookPaymentPin = (purchaseId: string, pin: string) => api.post('/payments/verify-pin', { purchaseId, pin });
 export const fetchBookPaymentStatus = (bookId: string) => api.get(`/payments/book/${encodeURIComponent(bookId)}/status`);
 export const fetchBookAccess = (bookId: string) => api.get(`/books/${encodeURIComponent(bookId)}/access`);
+export const fetchSavedBooks = () => api.get('/books/saved/me');
+export const toggleSavedBook = (bookId: string) => api.post(`/books/${encodeURIComponent(bookId)}/save`);
 
 // POSTers (Admin)
 export const uploadBook = (formData: FormData) => api.post('/books', formData);
