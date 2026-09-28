@@ -13,6 +13,12 @@ npm run dev
 The application uses the production API at
 `https://isoko-yubworozi.onrender.com/api`.
 
+## Netlify deployment
+
+The checked-in `netlify.toml` configures Netlify to build the Next.js app and
+publish its `.next` output through Netlify's Next.js runtime. The production
+site should use this directory as its project root.
+
 ## Vercel deployment
 
 Create this as a separate Vercel project with these settings:
