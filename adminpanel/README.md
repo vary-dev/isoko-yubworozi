@@ -27,8 +27,9 @@ Create this as a separate Vercel project with these settings:
 - Root Directory: `adminpanel`
 - Framework Preset: `Next.js`
 - Install Command: `npm ci`
-- Build Command: `npm run build`
+- Build Command: `npm run vercel-build`
 - Output Directory: leave empty (do not use `dist`)
+- Node.js Version: `22.x`
 
 The checked-in `vercel.json` also declares the Next.js framework and commands.
 Vercel must use the `adminpanel` directory as the project root for that file to
