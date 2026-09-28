@@ -7,7 +7,7 @@ import User from '../models/User';
 import { AuthRequest } from '../middleware/auth';
 
 const PAYMENT_NUMBER = process.env.MANUAL_PAYMENT_NUMBER || '0723777623';
-const PIN_LIFETIME_MS = 15 * 60 * 1000;
+const PIN_LIFETIME_MS = 25 * 60 * 1000;
 const MAX_PIN_ATTEMPTS = 5;
 const phonePattern = /^(?:\+?250|0)?7[2389]\d{7}$/;
 const hashPin = (pin: string) => crypto.createHmac('sha256', process.env.JWT_SECRET || 'isoko-payment-pin').update(pin).digest('hex');
@@ -22,6 +22,8 @@ const publicPurchase = (purchase: any) => ({
   status: purchase.status,
   paymentMethod: purchase.paymentMethod,
   payerPhone: purchase.payerPhone,
+  submittedAmount: purchase.submittedAmount,
+  paymentMarkedAt: purchase.paymentMarkedAt,
   verificationCodeExpiresAt: purchase.verificationCodeExpiresAt,
   verificationAttempts: purchase.verificationAttempts,
   paidAt: purchase.paidAt,
@@ -54,10 +56,10 @@ export const createManualPayment = async (req: AuthRequest, res: Response) => {
     const owned = await Purchase.findOne({ user: user._id, book: book._id, status: 'successful' });
     if (owned) return res.json({ alreadyOwned: true, purchase: publicPurchase(owned) });
 
-    const existing = await Purchase.findOne({ user: user._id, book: book._id, status: { $in: ['pending', 'pin_issued'] } }).sort({ createdAt: -1 });
+    const existing = await Purchase.findOne({ user: user._id, book: book._id, status: { $in: ['awaiting_payment', 'pending', 'pin_issued'] } }).sort({ createdAt: -1 });
     if (existing) {
       await expireIfNeeded(existing);
-      if (['pending', 'pin_issued'].includes(existing.status)) return res.json({ purchase: publicPurchase(existing), paymentNumber: PAYMENT_NUMBER });
+      if (['awaiting_payment', 'pending', 'pin_issued'].includes(existing.status)) return res.json({ purchase: publicPurchase(existing), paymentNumber: PAYMENT_NUMBER });
     }
 
     const txRef = 'IYU-' + Date.now().toString(36).toUpperCase() + '-' + crypto.randomBytes(3).toString('hex').toUpperCase();
@@ -70,10 +72,40 @@ export const createManualPayment = async (req: AuthRequest, res: Response) => {
       currency: 'RWF',
       paymentMethod,
       payerPhone: String(payerPhone).replace(/\s/g, ''),
+      status: 'awaiting_payment',
     });
     res.status(201).json({ purchase: publicPurchase(purchase), paymentNumber: PAYMENT_NUMBER });
   } catch (error) {
     res.status(500).json({ message: error instanceof Error ? error.message : 'Unable to create the payment request' });
+  }
+};
+
+export const markPaymentSent = async (req: AuthRequest, res: Response) => {
+  try {
+    if (!mongoose.isValidObjectId(req.params.id)) return res.status(400).json({ message: 'Invalid payment request' });
+    const purchase = await Purchase.findOne({ _id: req.params.id, user: req.user!.id });
+    if (!purchase) return res.status(404).json({ message: 'Payment request not found' });
+    if (purchase.status === 'successful') return res.json({ purchase: publicPurchase(purchase) });
+    if (!['awaiting_payment', 'pending', 'rejected'].includes(purchase.status)) {
+      return res.status(409).json({ message: 'This payment request cannot be submitted now' });
+    }
+
+    const payerPhone = String(req.body.payerPhone || purchase.payerPhone || '').replace(/\s/g, '');
+    const submittedAmount = Number(req.body.amount);
+    if (!phonePattern.test(payerPhone)) return res.status(400).json({ message: 'Enter the Rwanda phone number used for payment' });
+    if (!Number.isFinite(submittedAmount) || submittedAmount !== purchase.amount) {
+      return res.status(400).json({ message: `Enter the exact book price: ${purchase.amount.toLocaleString()} RWF` });
+    }
+
+    purchase.payerPhone = payerPhone;
+    purchase.submittedAmount = submittedAmount;
+    purchase.paymentMarkedAt = new Date();
+    purchase.status = 'pending';
+    purchase.rejectedReason = undefined;
+    await purchase.save();
+    res.json({ message: 'The administrator has been notified. Keep your payment message until approval.', purchase: publicPurchase(purchase) });
+  } catch (error) {
+    res.status(500).json({ message: error instanceof Error ? error.message : 'Unable to notify the administrator' });
   }
 };
 
@@ -118,7 +150,7 @@ export const myPurchases = async (req: AuthRequest, res: Response) => {
 
 export const bookPaymentStatus = async (req: AuthRequest, res: Response) => {
   if (!mongoose.isValidObjectId(req.params.bookId)) return res.status(400).json({ message: 'Invalid book identifier' });
-  const purchase = await Purchase.findOne({ user: req.user!.id, book: req.params.bookId, status: { $in: ['successful', 'pin_issued', 'pending'] } }).sort({ createdAt: -1 });
+  const purchase = await Purchase.findOne({ user: req.user!.id, book: req.params.bookId, status: { $in: ['successful', 'pin_issued', 'pending', 'awaiting_payment'] } }).sort({ createdAt: -1 });
   if (purchase) await expireIfNeeded(purchase);
   res.json({ owned: purchase?.status === 'successful', purchase: purchase ? publicPurchase(purchase) : null, paymentNumber: PAYMENT_NUMBER });
 };

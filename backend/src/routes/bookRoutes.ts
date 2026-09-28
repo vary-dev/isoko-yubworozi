@@ -7,9 +7,11 @@ import {
     updateBook,
     getAdminBooks,
     getBookAccess,
+    getSavedBooks,
+    toggleSavedBook,
 } from '../controllers/bookController';
 import { uploadCombined } from '../middleware/upload';
-import { protect, adminOnly } from '../middleware/auth';
+import { protect, adminOnly, optionalProtect } from '../middleware/auth';
 
 const router = express.Router();
 
@@ -28,7 +30,10 @@ router.get('/', getBooks);
 
 router.get('/admin/all', protect, adminOnly, getAdminBooks);
 
-router.get('/:id/access', protect, getBookAccess);
+router.get('/saved/me', protect, getSavedBooks);
+
+router.get('/:id/access', optionalProtect, getBookAccess);
+router.post('/:id/save', protect, toggleSavedBook);
 
 // @route   GET /api/books/:id
 router.get('/:id', getBookById);

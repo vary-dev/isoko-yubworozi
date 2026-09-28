@@ -3,6 +3,7 @@ import mongoose from 'mongoose';
 import Book from '../models/Book';
 import Purchase from '../models/Purchase';
 import { AuthRequest } from '../middleware/auth';
+import User from '../models/User';
 
 const isHttpsUrl = (value: unknown) => {
   try { return new URL(String(value)).protocol === 'https:'; } catch { return false; }
@@ -156,6 +157,7 @@ export const getBookAccess = async (req: AuthRequest, res: Response) => {
     const book = await Book.findById(req.params.id);
     if (!book) return res.status(404).json({ message: 'Book not found' });
     if (book.isPremium) {
+      if (!req.user) return res.status(401).json({ message: 'Sign in to access this premium book' });
       const purchase = await Purchase.exists({ user: req.user!.id, book: book._id, status: 'successful' });
       if (!purchase) return res.status(403).json({ message: 'A verified purchase is required to access this book' });
     }
@@ -163,4 +165,24 @@ export const getBookAccess = async (req: AuthRequest, res: Response) => {
   } catch (error) {
     res.status(500).json({ message: 'Unable to authorize book access', error });
   }
+};
+
+export const getSavedBooks = async (req: AuthRequest, res: Response) => {
+  const user = await User.findById(req.user!.id).populate('savedBooks');
+  if (!user) return res.status(404).json({ message: 'Account not found' });
+  res.json((user.savedBooks || []).map(publicBook));
+};
+
+export const toggleSavedBook = async (req: AuthRequest, res: Response) => {
+  const requestedBookId = String(req.params.id);
+  if (!mongoose.isValidObjectId(requestedBookId)) return res.status(400).json({ message: 'Invalid book identifier' });
+  if (!(await Book.exists({ _id: requestedBookId }))) return res.status(404).json({ message: 'Book not found' });
+  const user = await User.findById(req.user!.id);
+  if (!user) return res.status(404).json({ message: 'Account not found' });
+  const bookId = new mongoose.Types.ObjectId(requestedBookId);
+  const isSaved = user.savedBooks.some((id: any) => id.toString() === bookId.toString());
+  if (isSaved) user.savedBooks = user.savedBooks.filter((id: any) => id.toString() !== bookId.toString()) as any;
+  else user.savedBooks.push(bookId as any);
+  await user.save();
+  res.json({ saved: !isSaved });
 };

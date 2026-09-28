@@ -3,15 +3,17 @@
 import axios from 'axios';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 import PageHero from '@/components/ui/PageHero';
-import { fetchBookAccess, fetchMyPurchases, loginUser, registerUser, updateUserProfile } from '@/lib/api';
+import { fetchMyPurchases, fetchSavedBooks, loginUser, registerUser, updateUserProfile } from '@/lib/api';
 import { clearSession, getSession, saveSession, type Session } from '@/lib/session';
 import { useI18n } from '@/lib/i18n';
 
-type Purchase = { _id: string; book?: { _id: string; title: string; coverImage?: string; category?: string }; amount: number; currency: string; status: string; paidAt?: string; createdAt: string };
+type Book = { _id: string; title: string; coverImage?: string; category?: string; isPremium?: boolean; price?: number };
+type Purchase = { _id: string; book?: Book; amount: number; submittedAmount?: number; currency: string; status: string; paidAt?: string; paymentMarkedAt?: string; createdAt: string };
 
 const dashboardCopy = {
   en: { heading: 'Your learning dashboard', intro: 'Premium books and verified payments stay connected to this account.', library: 'Purchased books', empty: 'You have no verified premium books yet.', explore: 'Explore the library', read: 'Read book', history: 'Payment history', secure: 'Pay from your own MTN or Airtel wallet. We never ask for or store your mobile-money PIN.', photo: 'Profile photo', photoHint: 'Add a clear JPG, PNG or WebP image (maximum 8 MB).', savePhoto: 'Save profile', saved: 'Profile updated successfully.' },
@@ -20,18 +22,20 @@ const dashboardCopy = {
 };
 
 export default function AccountPage() {
+  const router = useRouter();
   const { t, locale } = useI18n();
   const words = dashboardCopy[locale];
   const [mode, setMode] = useState<'login' | 'register'>('login');
   const [session, setSession] = useState<Session | null>(null);
   const [purchases, setPurchases] = useState<Purchase[]>([]);
+  const [savedBooks, setSavedBooks] = useState<Book[]>([]);
   const [loading, setLoading] = useState(false);
   const [profileLoading, setProfileLoading] = useState(false);
   const [profileMessage, setProfileMessage] = useState('');
   const [error, setError] = useState('');
 
-  const loadPurchases = () => fetchMyPurchases().then((response) => setPurchases(response.data)).catch(() => setPurchases([]));
-  useEffect(() => { const frame = requestAnimationFrame(() => { const saved = getSession(); setSession(saved); if (saved) loadPurchases(); }); return () => cancelAnimationFrame(frame); }, []);
+  const loadAccountData = () => Promise.allSettled([fetchMyPurchases(), fetchSavedBooks()]).then(([payments, saved]) => { setPurchases(payments.status === 'fulfilled' ? payments.value.data : []); setSavedBooks(saved.status === 'fulfilled' ? saved.value.data : []); });
+  useEffect(() => { const frame = requestAnimationFrame(() => { const saved = getSession(); setSession(saved); if (saved) loadAccountData(); }); return () => cancelAnimationFrame(frame); }, []);
 
   const submit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault(); setLoading(true); setError('');
@@ -40,9 +44,9 @@ export default function AccountPage() {
       const response = mode === 'register'
         ? await registerUser({ name: String(data.get('name')), email: String(data.get('email')), password: String(data.get('password')) })
         : await loginUser({ email: String(data.get('email')), password: String(data.get('password')) });
-      saveSession(response.data); setSession(response.data); await loadPurchases();
+      saveSession(response.data); setSession(response.data); await loadAccountData();
       const next = new URLSearchParams(window.location.search).get('next');
-      if (next?.startsWith('/') && !next.startsWith('//')) window.location.assign(next);
+      if (next?.startsWith('/') && !next.startsWith('//')) router.push(next);
     } catch (requestError) {
       const responseCode = axios.isAxiosError(requestError) ? requestError.response?.data?.code : undefined;
       const responseMessage = axios.isAxiosError(requestError) ? requestError.response?.data?.message : undefined;
@@ -51,11 +55,8 @@ export default function AccountPage() {
     } finally { setLoading(false); }
   };
 
-  const readBook = async (bookId: string) => {
-    try { const response = await fetchBookAccess(bookId); window.open(response.data.fileUrl, '_blank', 'noopener,noreferrer'); }
-    catch { setError(t('account.error')); }
-  };
-  const logout = () => { clearSession(); setSession(null); setPurchases([]); };
+  const readBook = (bookId: string) => router.push(`/books/${bookId}/read`);
+  const logout = () => { clearSession(); setSession(null); setPurchases([]); setSavedBooks([]); };
   const updateProfile = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!session) return;
@@ -69,6 +70,8 @@ export default function AccountPage() {
     } finally { setProfileLoading(false); }
   };
   const successful = purchases.filter((purchase) => purchase.status === 'successful');
+  const pending = purchases.filter((purchase) => ['awaiting_payment', 'pending', 'pin_issued'].includes(purchase.status));
+  const totalPaid = successful.reduce((sum, purchase) => sum + purchase.amount, 0);
 
   return <main id="main-content">
     <Navbar />
@@ -93,11 +96,13 @@ export default function AccountPage() {
           </aside>
           <div className="rounded-3xl border border-isoko-dark/8 bg-white p-6 shadow-[0_20px_70px_rgba(6,59,31,.07)] sm:p-9">
             <p className="text-xs font-black uppercase tracking-[.16em] text-isoko-accent">{words.library}</p><h2 className="mt-2 text-2xl font-bold text-isoko-dark">{words.heading}</h2><p className="mt-2 text-sm text-slate-500">{words.intro}</p>
+            <div className="mt-6 grid gap-3 sm:grid-cols-3"><article className="rounded-2xl bg-emerald-50 p-4"><p className="text-[10px] font-black uppercase tracking-wider text-emerald-700">Purchased</p><p className="mt-2 text-2xl font-black text-isoko-dark">{successful.length}</p></article><article className="rounded-2xl bg-amber-50 p-4"><p className="text-[10px] font-black uppercase tracking-wider text-amber-700">Pending</p><p className="mt-2 text-2xl font-black text-isoko-dark">{pending.length}</p></article><article className="rounded-2xl bg-blue-50 p-4"><p className="text-[10px] font-black uppercase tracking-wider text-blue-700">Amount paid</p><p className="mt-2 text-lg font-black text-isoko-dark">{totalPaid.toLocaleString()} RWF</p></article></div>
             {successful.length ? <div className="mt-7 grid gap-4 sm:grid-cols-2">{successful.map((purchase) => <article key={purchase._id} className="flex gap-4 rounded-2xl border border-isoko-dark/8 p-4">
               {purchase.book?.coverImage && <div className="relative h-24 w-[4.5rem] shrink-0 overflow-hidden rounded-lg bg-isoko-light"><Image fill sizes="72px" src={purchase.book.coverImage} alt="" className="object-cover" /></div>}
               <div className="min-w-0"><p className="text-[10px] font-black uppercase tracking-wider text-isoko-accent">{purchase.book?.category}</p><h3 className="mt-1 line-clamp-2 text-sm font-bold text-isoko-dark">{purchase.book?.title}</h3><button onClick={() => purchase.book && readBook(purchase.book._id)} className="mt-3 text-xs font-extrabold text-isoko-primary"><i className="fa-solid fa-book-open mr-1.5" />{words.read}</button></div>
             </article>)}</div> : <div className="mt-7 rounded-2xl bg-[#f5faf6] p-7 text-center"><i className="fa-solid fa-book-open mb-3 text-2xl text-isoko-accent" /><p className="text-sm font-bold text-slate-600">{words.empty}</p><Link href="/books" className="mt-4 inline-flex text-sm font-extrabold text-isoko-primary">{words.explore}</Link></div>}
-            {purchases.length > 0 && <div className="mt-8"><h3 className="text-sm font-extrabold text-isoko-dark">{words.history}</h3><div className="mt-3 space-y-2">{purchases.map((purchase) => <div key={`history-${purchase._id}`} className="flex items-center justify-between gap-4 rounded-xl bg-[#f7faf8] px-4 py-3 text-xs"><span className="min-w-0 truncate font-bold text-slate-600">{purchase.book?.title || 'Book'}</span><span className={`shrink-0 rounded-full px-2 py-1 font-black ${purchase.status === 'successful' ? 'bg-emerald-100 text-emerald-800' : purchase.status === 'pending' ? 'bg-amber-100 text-amber-800' : purchase.status === 'pin_issued' ? 'bg-blue-100 text-blue-800' : 'bg-red-100 text-red-700'}`}>{purchase.status.replace('_', ' ')}</span></div>)}</div></div>}
+            {purchases.length > 0 && <div className="mt-8"><h3 className="text-sm font-extrabold text-isoko-dark">{words.history}</h3><div className="mt-3 space-y-2">{purchases.map((purchase) => <div key={`history-${purchase._id}`} className="flex items-center justify-between gap-4 rounded-xl bg-[#f7faf8] px-4 py-3 text-xs"><div className="min-w-0"><p className="truncate font-bold text-slate-600">{purchase.book?.title || 'Book'}</p><p className="mt-1 text-[10px] font-bold text-slate-400">{(purchase.submittedAmount || purchase.amount).toLocaleString()} {purchase.currency}</p></div><span className={`shrink-0 rounded-full px-2 py-1 font-black ${purchase.status === 'successful' ? 'bg-emerald-100 text-emerald-800' : ['awaiting_payment', 'pending'].includes(purchase.status) ? 'bg-amber-100 text-amber-800' : purchase.status === 'pin_issued' ? 'bg-blue-100 text-blue-800' : 'bg-red-100 text-red-700'}`}>{purchase.status.replaceAll('_', ' ')}</span></div>)}</div></div>}
+            <div className="mt-8 border-t border-isoko-dark/8 pt-7"><div className="flex items-center justify-between gap-4"><h3 className="text-sm font-extrabold text-isoko-dark">Saved books</h3><span className="rounded-full bg-isoko-light px-3 py-1 text-xs font-black text-isoko-primary">{savedBooks.length}</span></div>{savedBooks.length ? <div className="mt-4 grid gap-3 sm:grid-cols-2">{savedBooks.map((book) => <Link key={book._id} href={`/books/${book._id}`} className="flex items-center gap-3 rounded-2xl border border-isoko-dark/8 p-3 transition hover:border-isoko-accent"><div className="relative h-16 w-12 shrink-0 overflow-hidden rounded-md bg-isoko-light">{book.coverImage && <Image fill sizes="48px" src={book.coverImage} alt="" className="object-cover" />}</div><div className="min-w-0"><p className="text-[10px] font-black uppercase text-isoko-accent">{book.category || 'Book'}</p><p className="mt-1 line-clamp-2 text-xs font-bold text-isoko-dark">{book.title}</p></div></Link>)}</div> : <p className="mt-3 text-xs text-slate-500">Save useful books from the library and they will appear here.</p>}</div>
           </div>
         </div> : <div className="rounded-3xl border border-isoko-dark/8 bg-white p-7 shadow-[0_20px_70px_rgba(6,59,31,.08)] sm:p-9">
           <div className="mb-7 grid grid-cols-3 gap-2 text-center text-[10px] font-black uppercase tracking-wider text-slate-500"><span><i className="fa-solid fa-user-lock mb-2 block text-lg text-isoko-accent" />Account</span><span><i className="fa-solid fa-credit-card mb-2 block text-lg text-isoko-accent" />Payment</span><span><i className="fa-solid fa-book-open mb-2 block text-lg text-isoko-accent" />Access</span></div>

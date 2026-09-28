@@ -132,15 +132,13 @@ export default function BooksPage() {
                       </p>
                       <div className="flex items-center gap-3">
                         {book.fileUrl && !book.isPremium ? (
-                          <a
-                            href={book.fileUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
+                          <Link
+                            href={`/books/${book._id}/read`}
                             className="inline-flex items-center gap-2 bg-isoko-accent text-white px-4 py-2 rounded-lg text-[11px] font-black uppercase tracking-wider hover:bg-isoko-primary transition-all"
                           >
-                            <i className="fa-solid fa-download text-[10px]"></i>
-                            {t("library.download")}
-                          </a>
+                            <i className="fa-solid fa-book-open text-[10px]"></i>
+                            Read online
+                          </Link>
                         ) : book.isPremium ? (
                           <Link href={`/books/${book._id}`} className="inline-flex items-center gap-2 rounded-lg bg-isoko-dark px-4 py-2 text-[11px] font-black uppercase tracking-wider text-white transition hover:bg-isoko-primary"><i className="fa-solid fa-lock text-[10px]" />{book.price.toLocaleString()} RWF</Link>
                         ) : (

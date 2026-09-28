@@ -1,4 +1,5 @@
 "use client";
+/* eslint-disable @next/next/no-img-element -- media library assets can use arbitrary remote hosts */
 import { useEffect, useState } from 'react';
 import { FiCheck, FiCopy, FiExternalLink } from 'react-icons/fi';
 import AdminPageHeader from '@/components/ui/AdminPageHeader';
