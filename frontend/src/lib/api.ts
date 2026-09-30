@@ -30,6 +30,14 @@ export const fetchBookPaymentStatus = (bookId: string) => api.get(`/payments/boo
 export const fetchBookAccess = (bookId: string) => api.get(`/books/${encodeURIComponent(bookId)}/access`);
 export const fetchSavedBooks = () => api.get('/books/saved/me');
 export const toggleSavedBook = (bookId: string) => api.post(`/books/${encodeURIComponent(bookId)}/save`);
+export const fetchProducts = (params?: { category?: string; featured?: boolean }) => api.get('/products', { params });
+export const fetchProduct = (productId: string) => api.get(`/products/${encodeURIComponent(productId)}`);
+export const fetchSavedProducts = () => api.get('/products/saved/me');
+export const toggleSavedProduct = (productId: string) => api.post(`/products/${encodeURIComponent(productId)}/save`);
+export const fetchCart = () => api.get('/products/cart/me');
+export const addProductToCart = (productId: string) => api.post(`/products/${encodeURIComponent(productId)}/cart`);
+export const updateCartProduct = (productId: string, quantity: number) => api.patch(`/products/${encodeURIComponent(productId)}/cart`, { quantity });
+export const removeCartProduct = (productId: string) => api.delete(`/products/${encodeURIComponent(productId)}/cart`);
 
 // POSTers (Admin)
 export const uploadBook = (formData: FormData) => api.post('/books', formData);
