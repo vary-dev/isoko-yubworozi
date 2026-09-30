@@ -11,6 +11,7 @@ import statsRoutes from './routes/statsRoutes';
 import mediaRoutes from './routes/mediaRoutes';
 import youtubeRoutes from './routes/youtubeRoutes';
 import paymentRoutes from './routes/paymentRoutes';
+import productRoutes from './routes/productRoutes';
 
 // Initialization
 dotenv.config();
@@ -54,6 +55,7 @@ app.use('/api/stats', statsRoutes);
 app.use('/api/media', mediaRoutes);
 app.use('/api/youtube', youtubeRoutes);
 app.use('/api/payments', paymentRoutes);
+app.use('/api/products', productRoutes);
 
 // Global Error Handler (catches multer/file upload errors)
 app.use((err: any, _req: any, res: any, _next: any) => {

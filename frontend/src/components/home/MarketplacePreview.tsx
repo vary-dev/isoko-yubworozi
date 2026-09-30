@@ -1,28 +1,18 @@
 "use client";
 
-import { motion, useReducedMotion } from "framer-motion";
-import { useI18n } from "@/lib/i18n";
+import Link from 'next/link';
+import { useEffect, useState } from 'react';
+import ProductCard from '@/components/marketplace/ProductCard';
+import { fetchProducts } from '@/lib/api';
+import type { Product } from '@/lib/marketplace';
+import { useI18n } from '@/lib/i18n';
+
+const copy = { en: { eyebrow: 'Eguriro marketplace', title: 'Tools and products for better farming', body: 'Explore equipment, livestock medicines, feeds and practical agricultural products. Save useful items or send your cart through WhatsApp.', action: 'Explore all products', empty: 'New agricultural products will appear here as soon as they are published.' }, rw: { eyebrow: 'Eguriro ry’Ubworozi', title: 'Ibikoresho n’ibicuruzwa biteza imbere ubworozi', body: 'Reba imashini, imiti y’amatungo, ibiryo n’ibindi bikoresho. Bika ibyo ushaka cyangwa wohereze agatebo kuri WhatsApp.', action: 'Reba ibicuruzwa byose', empty: 'Ibicuruzwa bishya bizagaragara hano umuyobozi akimara kubishyiraho.' }, fr: { eyebrow: 'Marché Eguriro', title: 'Outils et produits pour une agriculture performante', body: 'Découvrez équipements, médicaments vétérinaires, aliments et produits agricoles. Enregistrez-les ou envoyez votre panier sur WhatsApp.', action: 'Voir tous les produits', empty: 'Les nouveaux produits apparaîtront ici dès leur publication.' } };
 
 export default function MarketplacePreview() {
-  const { t } = useI18n();
-  const reduced = useReducedMotion();
-  const items = [["fa-shield-halved", "market.verify"], ["fa-stethoscope", "market.guidance"], ["fa-lock", "market.secure"]] as const;
-  return (
-    <section className="bg-[#f3f8f4] py-20 sm:py-24" aria-labelledby="marketplace-title">
-      <div className="section-shell">
-        <motion.div initial={reduced ? false : { opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="relative overflow-hidden rounded-[2rem] bg-isoko-dark px-6 py-10 text-white shadow-[0_28px_90px_rgba(3,45,22,.18)] sm:px-10 lg:grid lg:grid-cols-[1.15fr_.85fr] lg:items-center lg:gap-12 lg:px-14 lg:py-14">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_85%_20%,rgba(244,185,66,.2),transparent_30%),radial-gradient(circle_at_5%_90%,rgba(76,159,56,.32),transparent_35%)]" />
-          <div className="relative">
-            <p className="mb-3 text-sm font-extrabold uppercase tracking-[.17em] text-isoko-gold">{t("market.eyebrow")}</p>
-            <h2 id="marketplace-title" className="max-w-2xl text-3xl font-bold text-balance sm:text-4xl">{t("market.title")}</h2>
-            <p className="mt-5 max-w-2xl text-base leading-7 text-white/70">{t("market.body")}</p>
-            <span className="mt-7 inline-flex items-center gap-2 rounded-full border border-isoko-gold/30 bg-isoko-gold/10 px-4 py-2 text-sm font-bold text-isoko-gold"><i className="fa-solid fa-clock" />{t("market.badge")}</span>
-          </div>
-          <div className="relative mt-8 grid gap-3 lg:mt-0">
-            {items.map(([icon, key]) => <div key={key} className="glass-card flex items-center gap-4 rounded-2xl px-5 py-4"><span className="grid h-11 w-11 place-items-center rounded-xl bg-white/10 text-isoko-gold"><i className={`fa-solid ${icon}`} /></span><span className="font-bold">{t(key)}</span></div>)}
-          </div>
-        </motion.div>
-      </div>
-    </section>
-  );
+  const { locale } = useI18n(); const words = copy[locale]; const [products, setProducts] = useState<Product[]>([]);
+  useEffect(() => { fetchProducts({ featured: true }).then(({ data }) => setProducts(data.slice(0, 4))).catch(() => undefined); }, []);
+  return <section className="bg-[#f3f8f4] py-20 sm:py-24" aria-labelledby="marketplace-title"><div className="section-shell"><div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between"><div><p className="text-sm font-extrabold uppercase tracking-[.17em] text-isoko-accent">{words.eyebrow}</p><h2 id="marketplace-title" className="mt-3 max-w-2xl text-3xl font-bold text-isoko-dark sm:text-4xl">{words.title}</h2><p className="mt-4 max-w-2xl text-base leading-7 text-slate-600">{words.body}</p></div><Link href="/eguriro" className="inline-flex min-h-12 shrink-0 items-center gap-2 rounded-xl bg-isoko-dark px-6 text-sm font-extrabold text-white">{words.action}<i className="fa-solid fa-arrow-right" /></Link></div>
+    {products.length ? <div className="mt-9 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">{products.map((product, index) => <ProductCard key={product._id} product={product} index={index} />)}</div> : <div className="mt-9 rounded-[2rem] bg-isoko-dark p-8 text-white sm:p-10"><i className="fa-solid fa-store text-2xl text-isoko-gold" /><p className="mt-4 max-w-xl text-sm leading-6 text-white/70">{words.empty}</p></div>}
+  </div></section>;
 }

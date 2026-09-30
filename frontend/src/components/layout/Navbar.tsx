@@ -7,12 +7,14 @@ import LanguageSwitcher from "./LanguageSwitcher";
 import { useI18n } from "@/lib/i18n";
 import Image from "next/image";
 import { clearSession, getSession, type Session } from "@/lib/session";
+import { fetchCart } from "@/lib/api";
 
 const navLinks = [
   { key: "nav.home" as const, href: "/" },
   { key: "nav.videos" as const, href: "/videos" },
   { key: "nav.blog" as const, href: "/blog" },
   { key: "nav.library" as const, href: "/books" },
+  { key: "nav.market" as const, href: "/eguriro" },
   { key: "nav.about" as const, href: "/about" },
   { key: "nav.contact" as const, href: "/contact" },
 ];
@@ -23,6 +25,7 @@ export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [session, setSession] = useState<Session | null>(null);
+  const [cartCount, setCartCount] = useState(0);
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 50);
@@ -46,9 +49,18 @@ export default function Navbar() {
     };
   }, []);
 
+  useEffect(() => {
+    const syncCart = () => getSession() ? fetchCart().then(({ data }) => setCartCount(data.reduce((sum: number, item: { quantity: number }) => sum + item.quantity, 0))).catch(() => setCartCount(0)) : setCartCount(0);
+    const frame = requestAnimationFrame(syncCart);
+    window.addEventListener("isoko-cart-change", syncCart);
+    window.addEventListener("isoko-session-change", syncCart);
+    return () => { cancelAnimationFrame(frame); window.removeEventListener("isoko-cart-change", syncCart); window.removeEventListener("isoko-session-change", syncCart); };
+  }, []);
+
   const logout = () => {
     clearSession();
     setSession(null);
+    setCartCount(0);
     setMobileOpen(false);
   };
 
@@ -67,7 +79,7 @@ export default function Navbar() {
         </Link>
 
         {/* Desktop Links */}
-        <div className="hidden lg:flex items-center gap-4 xl:gap-7">
+        <div className="hidden xl:flex items-center gap-4 2xl:gap-7">
           {navLinks.map((link) => (
             <Link
               key={link.key}
@@ -86,6 +98,10 @@ export default function Navbar() {
         <div className="flex items-center gap-3">
           <LanguageSwitcher isScrolled={isScrolled || mobileOpen} />
 
+          <Link href="/cart" aria-label="Marketplace cart" title="Marketplace cart" className={`relative grid h-10 w-10 place-items-center rounded-xl border transition hover:-translate-y-0.5 hover:border-isoko-accent ${isScrolled || mobileOpen ? "border-black/10 bg-white text-isoko-dark" : "border-white/20 bg-white/10 text-white backdrop-blur-xl"}`}>
+            <i className="fa-solid fa-basket-shopping" />{cartCount > 0 && <span className="absolute -right-1.5 -top-1.5 grid h-5 min-w-5 place-items-center rounded-full bg-isoko-gold px-1 text-[9px] font-black text-isoko-dark">{cartCount > 99 ? '99+' : cartCount}</span>}
+          </Link>
+
           <Link
             href="/account"
             aria-label={t("nav.account")}
@@ -95,7 +111,7 @@ export default function Navbar() {
             {session?.avatar ? <Image src={session.avatar} alt="" width={40} height={40} className="h-full w-full object-cover" /> : session ? <span className="text-xs font-black">{session.name.slice(0, 2).toUpperCase()}</span> : <i aria-hidden="true" className="fa-regular fa-user" />}
           </Link>
 
-          {session && <button type="button" onClick={logout} title={t("account.logout")} aria-label={t("account.logout")} className={`hidden h-10 items-center gap-2 rounded-xl border px-3 text-[11px] font-black uppercase tracking-wider transition lg:flex ${isScrolled ? "border-black/10 bg-white text-isoko-dark" : "border-white/20 bg-white/10 text-white"}`}><i className="fa-solid fa-arrow-right-from-bracket" />{t("account.logout")}</button>}
+          {session && <button type="button" onClick={logout} title={t("account.logout")} aria-label={t("account.logout")} className={`hidden h-10 items-center gap-2 rounded-xl border px-3 text-[11px] font-black uppercase tracking-wider transition xl:flex ${isScrolled ? "border-black/10 bg-white text-isoko-dark" : "border-white/20 bg-white/10 text-white"}`}><i className="fa-solid fa-arrow-right-from-bracket" />{t("account.logout")}</button>}
 
           <a
             href="https://youtube.com/@Isokoyubworozi"
@@ -114,7 +130,7 @@ export default function Navbar() {
             aria-label={mobileOpen ? t("nav.close") : t("nav.open")}
             aria-expanded={mobileOpen}
             aria-controls="mobile-navigation"
-            className={`lg:hidden w-10 h-10 rounded-lg flex items-center justify-center transition ${
+            className={`xl:hidden w-10 h-10 rounded-lg flex items-center justify-center transition ${
               isScrolled || mobileOpen
                 ? "bg-gray-100 text-isoko-dark"
                 : "bg-white/10 text-white"
@@ -137,7 +153,7 @@ export default function Navbar() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+              className="fixed inset-0 bg-black/50 z-40 xl:hidden"
               onClick={() => setMobileOpen(false)}
             />
             <motion.div
@@ -149,7 +165,7 @@ export default function Navbar() {
               role="dialog"
               aria-modal="true"
               aria-label="Mobile navigation"
-              className="fixed top-0 right-0 w-[min(88vw,22rem)] h-dvh bg-white z-50 lg:hidden flex flex-col shadow-2xl opacity-100"
+              className="fixed top-0 right-0 w-[min(88vw,22rem)] h-dvh bg-white z-50 xl:hidden flex flex-col shadow-2xl opacity-100"
             >
               <div className="p-6 border-b border-gray-100 flex items-center justify-between">
                 <span className="text-lg font-black text-isoko-dark tracking-tight">
@@ -178,6 +194,7 @@ export default function Navbar() {
                 ))}
               </div>
               <div className="p-6 border-t border-gray-100">
+                <Link href="/cart" onClick={() => setMobileOpen(false)} className="mb-3 flex items-center justify-between rounded-xl bg-isoko-light/60 p-3 text-xs font-black text-isoko-dark"><span><i className="fa-solid fa-basket-shopping mr-2 text-isoko-accent" />{t("nav.cart")}</span><span className="rounded-full bg-isoko-dark px-2 py-1 text-[9px] text-white">{cartCount}</span></Link>
                 <Link href="/account" onClick={() => setMobileOpen(false)} className="mb-3 flex items-center gap-3 rounded-xl border border-isoko-dark/10 p-3 text-isoko-dark">
                   <span className="relative grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-xl bg-isoko-light text-xs font-black text-isoko-primary">{session?.avatar ? <Image fill sizes="40px" src={session.avatar} alt="" className="object-cover" /> : session ? session.name.slice(0, 2).toUpperCase() : <i className="fa-regular fa-user" />}</span>
                   <span className="min-w-0 text-left"><span className="block truncate text-xs font-black">{session?.name || t("nav.account")}</span>{session && <span className="block truncate text-[10px] text-slate-500">{session.email}</span>}</span>

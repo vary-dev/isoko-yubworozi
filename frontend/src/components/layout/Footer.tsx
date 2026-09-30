@@ -16,14 +16,14 @@ export default function Footer() {
             <div className="mt-6 flex gap-3">
               {[
                 ["fa-brands fa-youtube", "https://youtube.com/@Isokoyubworozi", "YouTube"],
-                ["fa-brands fa-facebook-f", "#", "Facebook"], ["fa-brands fa-instagram", "#", "Instagram"],
-              ].map(([icon, href, label]) => <a key={label} href={href} aria-label={label} className="grid h-11 w-11 place-items-center rounded-full border border-white/15 bg-white/8 text-white/70 transition hover:-translate-y-1 hover:bg-isoko-accent hover:text-white"><i className={icon} /></a>)}
+                ["fa-brands fa-facebook-f", "https://www.facebook.com/profile.php?id=100068326084091", "Facebook"], ["fa-brands fa-instagram", "https://www.instagram.com/fabienfarmer1?igsh=MXhkNTJ0amE0Z2xydw==", "Instagram"],
+              ].map(([icon, href, label]) => <a key={label} href={href} target="_blank" rel="noopener noreferrer" aria-label={label} className="grid h-11 w-11 place-items-center rounded-full border border-white/15 bg-white/8 text-white/70 transition hover:-translate-y-1 hover:bg-isoko-accent hover:text-white"><i className={icon} /></a>)}
             </div>
           </div>
           <div>
             <h3 className="mb-5 text-sm font-bold uppercase tracking-[.15em] text-isoko-gold">{t("footer.links")}</h3>
             <ul className="space-y-3 text-[15px] text-white/62">
-              {[["nav.home","/"],["nav.videos","/videos"],["nav.blog","/blog"],["nav.library","/books"],["nav.about","/about"],["nav.contact","/contact"],["nav.account","/account"]].map(([key,href]) => <li key={key}><Link href={href} className="transition hover:text-white">{t(key as Parameters<typeof t>[0])}</Link></li>)}
+              {[["nav.home","/"],["nav.videos","/videos"],["nav.blog","/blog"],["nav.library","/books"],["nav.market","/eguriro"],["nav.about","/about"],["nav.contact","/contact"],["nav.account","/account"]].map(([key,href]) => <li key={key}><Link href={href} className="transition hover:text-white">{t(key as Parameters<typeof t>[0])}</Link></li>)}
             </ul>
           </div>
           <div>

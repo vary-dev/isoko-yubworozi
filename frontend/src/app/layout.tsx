@@ -3,6 +3,7 @@ import "./globals.css";
 import type { Metadata, Viewport } from "next";
 import Script from "next/script";
 import Providers from "@/components/Providers";
+import WhatsAppButton from "@/components/layout/WhatsAppButton";
 
 const productionSiteUrl =
   process.env.NEXT_PUBLIC_SITE_URL || "https://isokoyubworozi.vercel.app";
@@ -77,12 +78,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             "@type": "Organization",
             name: "Isoko y'Ubworozi",
             url: productionSiteUrl,
-            sameAs: ["https://youtube.com/@Isokoyubworozi"],
+            sameAs: ["https://youtube.com/@Isokoyubworozi", "https://www.facebook.com/profile.php?id=100068326084091", "https://www.instagram.com/fabienfarmer1"],
             areaServed: "RW",
             description: "Digital poultry and livestock farming education platform.",
           }) }}
         />
-        <Providers>{children}</Providers>
+        <Providers>{children}<WhatsAppButton /></Providers>
       </body>
     </html>
   );

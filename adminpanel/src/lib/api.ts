@@ -25,4 +25,8 @@ export const getAdminMe = () => API.get('/auth/admin/me');
 export const getPaymentRequests = () => API.get('/payments/admin');
 export const issuePaymentPin = (id: string) => API.post(`/payments/admin/${id}/issue-pin`);
 export const rejectPaymentRequest = (id: string, reason: string) => API.post(`/payments/admin/${id}/reject`, { reason });
+export const getProducts = () => API.get('/products');
+export const createProduct = (data: FormData) => API.post('/products', data);
+export const updateProduct = (id: string, data: FormData) => API.put(`/products/${id}`, data);
+export const deleteProduct = (id: string) => API.delete(`/products/${id}`);
 export default API;

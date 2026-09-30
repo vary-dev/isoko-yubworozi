@@ -2,6 +2,7 @@ import type { MetadataRoute } from 'next';
 
 type Article = { slug: string; updatedAt?: string };
 type Book = { _id: string; updatedAt?: string };
+type Product = { _id: string; updatedAt?: string };
 
 const productionSiteUrl =
   process.env.NEXT_PUBLIC_SITE_URL || 'https://isokoyubworozi.vercel.app';
@@ -14,6 +15,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     '/videos',
     '/blog',
     '/books',
+    '/eguriro',
     '/about',
     '/contact',
     '/privacy',
@@ -26,12 +28,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }));
 
   try {
-    const [articleResponse, bookResponse] = await Promise.all([
+    const [articleResponse, bookResponse, productResponse] = await Promise.all([
       fetch(`${productionApiUrl}/articles`, { next: { revalidate: 900 } }),
       fetch(`${productionApiUrl}/books`, { next: { revalidate: 900 } }),
+      fetch(`${productionApiUrl}/products`, { next: { revalidate: 900 } }),
     ]);
     const articles: Article[] = articleResponse.ok ? await articleResponse.json() : [];
     const books: Book[] = bookResponse.ok ? await bookResponse.json() : [];
+    const products: Product[] = productResponse.ok ? await productResponse.json() : [];
 
     return [
       ...staticPages,
@@ -46,6 +50,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         lastModified: book.updatedAt ? new Date(book.updatedAt) : new Date(),
         changeFrequency: 'monthly' as const,
         priority: 0.7,
+      })),
+      ...products.map((product) => ({
+        url: `${productionSiteUrl}/eguriro/${product._id}`,
+        lastModified: product.updatedAt ? new Date(product.updatedAt) : new Date(),
+        changeFrequency: 'weekly' as const,
+        priority: 0.75,
       })),
     ];
   } catch {
