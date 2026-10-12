@@ -59,11 +59,49 @@ app.use('/api/products', productRoutes);
 
 // Global Error Handler (catches multer/file upload errors)
 app.use((err: any, _req: any, res: any, _next: any) => {
-  console.error('Server Error:', err?.message || err);
-  if (err?.name === 'MulterError') {
-    return res.status(400).json({ message: 'File upload error', error: err.message });
+  const message = typeof err?.message === 'string' ? err.message : 'Unexpected server error';
+  const isMulterError = err?.name === 'MulterError';
+  const isUploadValidationError = err?.name === 'UploadValidationError';
+  const cloudinaryStatus = Number.isInteger(err?.http_code) ? err.http_code : undefined;
+  const isCloudinaryError = cloudinaryStatus !== undefined;
+  const isUploadError = isMulterError || isUploadValidationError || isCloudinaryError;
+  const status = isCloudinaryError ? 502 : isUploadError ? 400 : 500;
+  const code = typeof err?.code === 'string' ? err.code : undefined;
+  const field = typeof err?.field === 'string' ? err.field : undefined;
+
+  console.error(isUploadError ? 'Upload Error:' : 'Server Error:', {
+    name: err?.name,
+    message,
+    code,
+    field,
+    cloudinaryStatus,
+  });
+
+  if (isMulterError && err.code === 'LIMIT_FILE_SIZE') {
+    return res.status(status).json({
+      message: 'File upload failed',
+      details: 'The selected file exceeds the upload size limit.',
+      code,
+      field,
+    });
   }
-  res.status(500).json({ message: 'Server error', error: err?.message || err });
+
+  if (isMulterError && err.code === 'LIMIT_FILE_COUNT') {
+    return res.status(status).json({
+      message: 'File upload failed',
+      details: 'Too many files were selected for this upload.',
+      code,
+      field,
+    });
+  }
+
+  res.status(status).json({
+    message: isUploadError ? 'File upload failed' : 'Server error',
+    details: message,
+    code,
+    field,
+    ...(cloudinaryStatus !== undefined ? { provider: 'Cloudinary', providerStatus: cloudinaryStatus } : {}),
+  });
 });
 
 // Server Listen

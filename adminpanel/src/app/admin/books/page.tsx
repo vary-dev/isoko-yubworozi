@@ -1,7 +1,7 @@
 "use client";
 /* eslint-disable @next/next/no-img-element -- book covers are user-selected remote media with arbitrary hosts */
 import { useState, useEffect } from 'react';
-import { getBooks, uploadBook, updateBook, deleteBook } from '@/lib/api';
+import { getApiErrorMessage, getBooks, uploadBook, updateBook, deleteBook } from '@/lib/api';
 import { motion, AnimatePresence } from 'framer-motion';
 import MediaPicker, { MediaAsset } from '@/components/media/MediaPicker';
 
@@ -28,13 +28,16 @@ export default function BookAdmin() {
   const [files, setFiles] = useState<{ coverImage: File | null; fileUrl: File | null }>({ coverImage: null, fileUrl: null });
   const [coverImageUrl, setCoverImageUrl] = useState('');
   const [pickerOpen, setPickerOpen] = useState(false);
+  const [notice, setNotice] = useState('');
+  const [noticeKind, setNoticeKind] = useState<'success' | 'error'>('success');
 
   const fetchBooks = async () => {
     try {
       const res = await getBooks();
       setBooks(res.data);
-    } catch (err) {
-      console.error("Failed to fetch books:", err);
+    } catch (err: unknown) {
+      setNoticeKind('error');
+      setNotice(getApiErrorMessage(err, 'Could not load the book library.'));
     } finally {
       setFetching(false);
     }
@@ -53,7 +56,13 @@ export default function BookAdmin() {
     e.preventDefault();
 
     if (!formData.title.trim() || !formData.description.trim()) {
-      alert("Please fill in the title and description.");
+      setNoticeKind('error');
+      setNotice('Please fill in the title and description.');
+      return;
+    }
+    if (!editingId && ((!files.coverImage && !coverImageUrl) || !files.fileUrl)) {
+      setNoticeKind('error');
+      setNotice('Choose a cover image and PDF file for the new book.');
       return;
     }
 
@@ -71,21 +80,16 @@ export default function BookAdmin() {
     try {
       if (editingId) {
         await updateBook(editingId, data);
-        alert("Book updated successfully!");
       } else {
-        if ((!files.coverImage && !coverImageUrl) || !files.fileUrl) {
-          alert("Choose a cover image and PDF file for the new book.");
-          setLoading(false);
-          return;
-        }
         await uploadBook(data);
-        alert("Book uploaded successfully!");
       }
+      setNoticeKind('success');
+      setNotice(editingId ? 'Book updated successfully.' : 'Book uploaded successfully.');
       resetForm();
-      fetchBooks();
+      await fetchBooks();
     } catch (requestError: unknown) {
-      const err = requestError as { response?: { data?: { message?: string } } };
-      alert(err.response?.data?.message || "Upload failed. Check console for details.");
+      setNoticeKind('error');
+      setNotice(getApiErrorMessage(requestError, 'Book upload failed.'));
     } finally {
       setLoading(false);
     }
@@ -108,10 +112,12 @@ export default function BookAdmin() {
     if (!confirm("Are you sure you want to delete this book?")) return;
     try {
       await deleteBook(id);
-      alert("Book deleted successfully.");
-      fetchBooks();
-    } catch {
-      alert("Failed to delete book.");
+      setNoticeKind('success');
+      setNotice('Book deleted successfully.');
+      await fetchBooks();
+    } catch (error: unknown) {
+      setNoticeKind('error');
+      setNotice(getApiErrorMessage(error, 'Failed to delete book.'));
     }
   };
 
@@ -121,23 +127,24 @@ export default function BookAdmin() {
         <h2 className="text-3xl font-black text-isoko-dark">Farming Books</h2>
         <p className="text-sm text-gray-400 mt-1">Manage your digital farming library</p>
       </div>
+      {notice && <p role={noticeKind === 'error' ? 'alert' : 'status'} className={`rounded-2xl p-4 text-sm font-bold ${noticeKind === 'error' ? 'border border-red-200 bg-red-50 text-red-800' : 'border border-isoko-primary/15 bg-white text-isoko-dark'}`}>{notice}</p>}
 
       {/* UPLOAD / EDIT FORM CARD */}
-      <section className="bg-white p-8 rounded-[2rem] border border-gray-100 shadow-sm">
+      <section className="bg-white p-4 rounded-3xl border border-gray-100 shadow-sm sm:p-8 sm:rounded-[2rem]">
         <h3 className="text-lg font-black text-isoko-dark mb-6 uppercase tracking-tight flex items-center gap-3">
           <i className={`fa-solid ${editingId ? 'fa-pen-to-square' : 'fa-cloud-arrow-up'} text-isoko-accent`}></i>
           {editingId ? 'Edit Book' : 'Add New Digital Book'}
         </h3>
         <form onSubmit={handleUpload} className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-4">
-            <input type="text" placeholder="Book Title" value={formData.title} className="w-full p-4 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:border-isoko-accent transition"
+            <input type="text" aria-label="Book title" required placeholder="Book Title" value={formData.title} className="min-h-12 w-full p-4 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:border-isoko-accent transition"
               onChange={(e) => setFormData({...formData, title: e.target.value})} />
-            <textarea placeholder="Description" value={formData.description} className="w-full p-4 bg-gray-50 border border-gray-200 rounded-xl h-32 outline-none focus:border-isoko-accent transition resize-none"
+            <textarea aria-label="Book description" required placeholder="Description" value={formData.description} className="w-full p-4 bg-gray-50 border border-gray-200 rounded-xl h-32 outline-none focus:border-isoko-accent transition resize-y"
               onChange={(e) => setFormData({...formData, description: e.target.value})} />
-            <div className="flex gap-4">
-               <input type="number" placeholder="Price (RWF)" value={formData.price || ''} className="w-full p-4 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:border-isoko-accent transition"
+            <div className="grid gap-3 sm:grid-cols-2">
+               <input type="number" min="0" aria-label="Book price in RWF" placeholder="Price (RWF)" value={formData.price || ''} className="min-h-12 w-full min-w-0 p-4 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:border-isoko-accent transition"
                  onChange={(e) => setFormData({...formData, price: Number(e.target.value)})} />
-               <select value={formData.category} className="p-4 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:border-isoko-accent transition" onChange={(e) => setFormData({...formData, category: e.target.value})}>
+               <select aria-label="Book category" value={formData.category} className="min-h-12 w-full min-w-0 p-4 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:border-isoko-accent transition" onChange={(e) => setFormData({...formData, category: e.target.value})}>
                   <option>Poultry</option>
                   <option>Livestock</option>
                   <option>Feeds</option>
@@ -150,21 +157,26 @@ export default function BookAdmin() {
             </label>
           </div>
           <div className="space-y-4">
-            <div className="border-2 border-dashed border-gray-200 p-6 rounded-2xl text-center hover:border-isoko-accent/50 transition">
+            <div className="border-2 border-dashed border-gray-200 p-4 sm:p-6 rounded-2xl text-center hover:border-isoko-accent/50 transition">
               <i className="fa-solid fa-image text-2xl text-gray-300 mb-2"></i>
-              <p className="text-xs font-bold text-gray-400 mb-2 uppercase">
-                Cover Image {editingId ? '(leave empty to keep current)' : ''}
-              </p>
-              <input type="file" accept="image/*" className="text-xs" onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFiles({...files, coverImage: e.target.files?.[0] || null})} />
+              <p className="text-xs font-bold text-gray-500 mb-3 uppercase">Cover image {editingId ? '(leave empty to keep current)' : ''}</p>
+              <label className="inline-flex min-h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-xl border border-gray-200 bg-gray-50 px-4 text-xs font-extrabold text-isoko-dark">
+                <i className="fa-solid fa-cloud-arrow-up" />
+                <span className="max-w-[75%] truncate">{files.coverImage?.name || 'Choose a photo from this device'}</span>
+                <input type="file" accept="image/*" className="sr-only" onChange={(e: React.ChangeEvent<HTMLInputElement>) => { setFiles({...files, coverImage: e.target.files?.[0] || null}); setCoverImageUrl(''); }} />
+              </label>
               <button type="button" onClick={() => setPickerOpen(true)} className="mt-3 block w-full text-xs font-extrabold text-isoko-primary">Choose from media library</button>
               {coverImageUrl && <img src={coverImageUrl} alt="Selected cover" className="mx-auto mt-3 h-24 w-20 rounded-lg object-cover" />}
             </div>
-            <div className="border-2 border-dashed border-gray-200 p-6 rounded-2xl text-center hover:border-isoko-accent/50 transition">
+            <div className="border-2 border-dashed border-gray-200 p-4 sm:p-6 rounded-2xl text-center hover:border-isoko-accent/50 transition">
               <i className="fa-solid fa-file-pdf text-2xl text-gray-300 mb-2"></i>
-              <p className="text-xs font-bold text-gray-400 mb-2 uppercase">
-                PDF Document {editingId ? '(leave empty to keep current)' : ''}
-              </p>
-              <input type="file" accept=".pdf" className="text-xs" onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFiles({...files, fileUrl: e.target.files?.[0] || null})} />
+              <p className="text-xs font-bold text-gray-500 mb-3 uppercase">PDF document {editingId ? '(leave empty to keep current)' : ''}</p>
+              <label className="inline-flex min-h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-xl border border-gray-200 bg-gray-50 px-4 text-xs font-extrabold text-isoko-dark">
+                <i className="fa-solid fa-file-arrow-up" />
+                <span className="max-w-[75%] truncate">{files.fileUrl?.name || 'Choose a PDF from this device'}</span>
+                <input type="file" accept="application/pdf,.pdf" className="sr-only" onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFiles({...files, fileUrl: e.target.files?.[0] || null})} />
+              </label>
+              <p className="mt-2 text-[10px] text-gray-400">PDF files up to 25 MB</p>
             </div>
             <button disabled={loading} className="w-full bg-isoko-primary text-white py-5 rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-isoko-dark transition shadow-lg shadow-isoko-primary/20 disabled:bg-gray-300 disabled:cursor-not-allowed">
               {loading ? "Uploading..." : (editingId ? "Update Book" : "Publish Book")}
@@ -214,11 +226,11 @@ export default function BookAdmin() {
                   <div className="flex justify-between items-center mt-3">
                     <span className="text-[10px] bg-isoko-light text-isoko-primary px-2 py-1 rounded-lg font-black uppercase">{book.category}</span>
                     <div className="flex gap-2">
-                      <button onClick={() => handleEdit(book)} className="text-isoko-primary hover:text-isoko-accent transition" title="Edit">
-                        <i className="fa-solid fa-pen-to-square text-xs"></i>
+                      <button onClick={() => handleEdit(book)} className="secondary-button min-h-11 flex-1" aria-label={`Edit ${book.title}`}>
+                      <i className="fa-solid fa-pen-to-square text-xs"></i><span>Edit</span>
                       </button>
-                      <button onClick={() => handleDelete(book._id)} className="text-red-400 hover:text-red-600 transition" title="Delete">
-                        <i className="fa-solid fa-trash text-xs"></i>
+                      <button onClick={() => handleDelete(book._id)} className="secondary-button min-h-11 flex-1 text-red-600" aria-label={`Delete ${book.title}`}>
+                      <i className="fa-solid fa-trash text-xs"></i><span>Delete</span>
                       </button>
                     </div>
                   </div>
@@ -231,7 +243,7 @@ export default function BookAdmin() {
           </div>
         </div>
       )}
-      <MediaPicker open={pickerOpen} onClose={() => setPickerOpen(false)} onSelect={(asset: MediaAsset) => setCoverImageUrl(asset.url)} />
+      <MediaPicker open={pickerOpen} onClose={() => setPickerOpen(false)} onSelect={(asset: MediaAsset) => { setCoverImageUrl(asset.url); setFiles(current => ({ ...current, coverImage: null })); }} />
     </div>
   );
 }

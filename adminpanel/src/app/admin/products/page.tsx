@@ -1,10 +1,9 @@
 "use client";
 /* eslint-disable @next/next/no-img-element -- administrator-selected Cloudinary product images */
 
-import axios from 'axios';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { createProduct, deleteProduct, getProducts, updateProduct } from '@/lib/api';
+import { createProduct, deleteProduct, getApiErrorMessage, getProducts, updateProduct } from '@/lib/api';
 import MediaPicker, { type MediaAsset } from '@/components/media/MediaPicker';
 
 type Localized = { rw: string; en: string; fr: string };
@@ -19,32 +18,40 @@ export default function ProductAdminPage() {
   const [existingImages, setExistingImages] = useState<string[]>([]);
   const [newImages, setNewImages] = useState<File[]>([]);
   const [newImagePreviews, setNewImagePreviews] = useState<string[]>([]);
+  const previewUrls = useRef<string[]>([]);
   const [picker, setPicker] = useState(false);
   const [busy, setBusy] = useState(false);
   const [loading, setLoading] = useState(true);
   const [notice, setNotice] = useState('');
+  const [noticeKind, setNoticeKind] = useState<'success' | 'error'>('success');
 
-  const load = () => getProducts().then(({ data }) => setProducts(data)).catch(() => setNotice('Unable to load products. Check the backend deployment.')).finally(() => setLoading(false));
+  const load = () => getProducts().then(({ data }) => setProducts(data)).catch((error: unknown) => {
+    setNoticeKind('error');
+    setNotice(getApiErrorMessage(error, 'Unable to load products. Check the backend deployment.'));
+  }).finally(() => setLoading(false));
   useEffect(() => { const timer = window.setTimeout(load, 0); return () => window.clearTimeout(timer); }, []);
-  useEffect(() => {
-    const previews = newImages.map((file) => URL.createObjectURL(file));
-    setNewImagePreviews(previews);
-    return () => previews.forEach((url) => URL.revokeObjectURL(url));
-  }, [newImages]);
+  useEffect(() => () => previewUrls.current.forEach((url) => URL.revokeObjectURL(url)), []);
 
-  const reset = () => { setForm(empty); setEditing(null); setExistingImages([]); setNewImages([]); };
+  const clearNewImages = () => {
+    previewUrls.current.forEach((url) => URL.revokeObjectURL(url));
+    previewUrls.current = [];
+    setNewImagePreviews([]);
+    setNewImages([]);
+  };
+  const reset = () => { setForm(empty); setEditing(null); setExistingImages([]); clearNewImages(); };
   const edit = (product: Product) => {
     setEditing(product._id);
     setForm({ nameRw: product.name.rw, nameEn: product.name.en, nameFr: product.name.fr, descriptionRw: product.description.rw, descriptionEn: product.description.en, descriptionFr: product.description.fr, category: product.category, hasPrice: product.hasPrice, price: product.price ? String(product.price) : '', inStock: product.inStock, featured: product.featured });
     setExistingImages(product.images?.length ? product.images : product.image ? [product.image] : []);
-    setNewImages([]);
+    clearNewImages();
     setNotice('');
+    setNoticeKind('success');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
   const submit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (existingImages.length + newImages.length < 1) { setNotice('Add at least one product image.'); return; }
-    if (existingImages.length + newImages.length > 10) { setNotice('A product can have at most 10 images.'); return; }
+    if (existingImages.length + newImages.length < 1) { setNoticeKind('error'); setNotice('Add at least one product image.'); return; }
+    if (existingImages.length + newImages.length > 10) { setNoticeKind('error'); setNotice('A product can have at most 10 images.'); return; }
     setBusy(true);
     setNotice('');
     const data = new FormData();
@@ -54,11 +61,13 @@ export default function ProductAdminPage() {
     try {
       if (editing) await updateProduct(editing, data);
       else await createProduct(data);
+      setNoticeKind('success');
       setNotice(editing ? 'Product updated successfully.' : 'Product published successfully.');
       reset();
       await load();
     } catch (error: unknown) {
-      setNotice(axios.isAxiosError(error) ? error.response?.data?.message || 'The product could not be saved.' : 'The product could not be saved.');
+      setNoticeKind('error');
+      setNotice(getApiErrorMessage(error, 'The product could not be saved.'));
     } finally {
       setBusy(false);
     }
@@ -69,29 +78,47 @@ export default function ProductAdminPage() {
       await deleteProduct(product._id);
       setProducts((current) => current.filter((item) => item._id !== product._id));
       if (editing === product._id) reset();
+      setNoticeKind('success');
       setNotice('Product deleted successfully.');
-    } catch {
-      setNotice('The product could not be deleted.');
+    } catch (error: unknown) {
+      setNoticeKind('error');
+      setNotice(getApiErrorMessage(error, 'The product could not be deleted.'));
     }
   };
   const addFiles = (files: FileList | null) => {
     if (!files) return;
     const selected = Array.from(files);
     if (existingImages.length + newImages.length + selected.length > 10) {
+      setNoticeKind('error');
       setNotice('A product can have at most 10 images. Remove an image before adding more.');
       return;
     }
+    if (selected.some((file) => file.size > 15 * 1024 * 1024)) {
+      setNoticeKind('error');
+      setNotice('Each product photo must be 15 MB or smaller. Resize large phone photos and try again.');
+      return;
+    }
     setNotice('');
+    setNoticeKind('success');
+    previewUrls.current = [...previewUrls.current, ...selected.map((file) => URL.createObjectURL(file))];
+    setNewImagePreviews(previewUrls.current);
     setNewImages((current) => [...current, ...selected]);
   };
+  const removeNewImage = (index: number) => {
+    const removedPreview = previewUrls.current[index];
+    if (removedPreview) URL.revokeObjectURL(removedPreview);
+    previewUrls.current = previewUrls.current.filter((_, imageIndex) => imageIndex !== index);
+    setNewImagePreviews(previewUrls.current);
+    setNewImages((current) => current.filter((_, imageIndex) => imageIndex !== index));
+  };
   const field = (key: keyof ProductForm, placeholder: string, textarea = false) => textarea
-    ? <textarea value={String(form[key])} onChange={(event) => setForm({ ...form, [key]: event.target.value })} placeholder={placeholder} className="input min-h-28 resize-y" />
-    : <input value={String(form[key])} onChange={(event) => setForm({ ...form, [key]: event.target.value })} placeholder={placeholder} className="input" />;
+    ? <textarea required={key === 'descriptionRw'} value={String(form[key])} onChange={(event) => setForm({ ...form, [key]: event.target.value })} placeholder={placeholder} className="input min-h-28 resize-y" />
+    : <input required={key === 'nameRw'} value={String(form[key])} onChange={(event) => setForm({ ...form, [key]: event.target.value })} placeholder={placeholder} className="input" />;
 
   return <div className="space-y-8">
     <header><p className="text-xs font-black uppercase tracking-[.18em] text-leaf">Marketplace publishing</p><h1 className="mt-2 text-3xl font-bold text-forest">Eguriro products</h1><p className="mt-2 text-sm text-slate">Create, view, update and delete products, including multiple gallery images for each listing.</p></header>
-    {notice && <p role="status" className="rounded-2xl border border-leaf/15 bg-white p-4 text-sm font-bold text-forest">{notice}</p>}
-    <section className="surface rounded-[2rem] p-5 sm:p-8">
+    {notice && <p role={noticeKind === 'error' ? 'alert' : 'status'} className={`rounded-2xl border p-4 text-sm font-bold ${noticeKind === 'error' ? 'border-red-200 bg-red-50 text-red-800' : 'border-leaf/15 bg-white text-forest'}`}>{notice}</p>}
+    <section className="surface rounded-3xl p-4 sm:rounded-[2rem] sm:p-8">
       <div className="mb-7 flex items-center justify-between gap-3"><div><h2 className="text-lg font-bold text-forest">{editing ? 'Edit product' : 'Add a product'}</h2><p className="mt-1 text-xs text-slate">Add up to 10 images. Drag and drop is not required; select multiple files at once.</p></div>{editing && <button type="button" onClick={reset} className="secondary-button">Cancel edit</button>}</div>
       <form onSubmit={submit} className="grid gap-7 xl:grid-cols-[1.25fr_.75fr]">
         <div className="space-y-6">
@@ -105,9 +132,14 @@ export default function ProductAdminPage() {
             <div className="mb-3 flex items-center justify-between"><p className="text-xs font-black uppercase tracking-wider text-forest">Product gallery</p><span className="rounded-full bg-white px-2.5 py-1 text-[10px] font-black text-leaf">{existingImages.length + newImages.length}/10</span></div>
             {(existingImages.length + newImages.length) > 0 ? <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
               {existingImages.map((src, index) => <div key={`${src}-${index}`} className="relative aspect-square overflow-hidden rounded-xl bg-white"><img src={src} alt={`Product gallery image ${index + 1}`} className="h-full w-full object-cover" /><button type="button" onClick={() => setExistingImages((current) => current.filter((_, imageIndex) => imageIndex !== index))} aria-label={`Remove product image ${index + 1}`} className="absolute right-2 top-2 grid h-8 w-8 place-items-center rounded-full bg-black/70 text-white hover:bg-red-600"><i className="fa-solid fa-xmark" /></button></div>)}
-              {newImagePreviews.map((src, index) => <div key={`${src}-${index}`} className="relative aspect-square overflow-hidden rounded-xl bg-white"><img src={src} alt={`New product gallery image ${index + 1}`} className="h-full w-full object-cover" /><button type="button" onClick={() => setNewImages((current) => current.filter((_, imageIndex) => imageIndex !== index))} aria-label={`Remove new product image ${index + 1}`} className="absolute right-2 top-2 grid h-8 w-8 place-items-center rounded-full bg-black/70 text-white hover:bg-red-600"><i className="fa-solid fa-xmark" /></button></div>)}
+              {newImagePreviews.map((src, index) => <div key={`${src}-${index}`} className="relative aspect-square overflow-hidden rounded-xl bg-white"><img src={src} alt={`New product gallery image ${index + 1}`} className="h-full w-full object-cover" /><button type="button" onClick={() => removeNewImage(index)} aria-label={`Remove new product image ${index + 1}`} className="absolute right-2 top-2 grid h-8 w-8 place-items-center rounded-full bg-black/70 text-white hover:bg-red-600"><i className="fa-solid fa-xmark" /></button></div>)}
             </div> : <div className="grid min-h-36 place-items-center rounded-xl bg-white text-3xl text-slate/35"><i className="fa-regular fa-images" /></div>}
-            <label className="mt-4 block text-xs font-bold text-forest">Upload multiple images<input type="file" accept="image/*" multiple onChange={(event) => { addFiles(event.target.files); event.currentTarget.value = ''; }} className="mt-2 w-full text-xs" /></label>
+            <label className="secondary-button mt-4 min-h-12 w-full cursor-pointer justify-center">
+              <i className="fa-solid fa-cloud-arrow-up" />
+              <span>Choose photos from this device</span>
+              <input type="file" accept="image/*" multiple onChange={(event) => { addFiles(event.target.files); event.currentTarget.value = ''; }} className="sr-only" />
+            </label>
+            <p className="mt-2 text-center text-[11px] leading-5 text-slate">Choose one or more photos from your phone or computer. Up to 10 photos, 15 MB each.</p>
             <button type="button" onClick={() => setPicker(true)} disabled={existingImages.length + newImages.length >= 10} className="mt-4 text-xs font-black text-leaf disabled:opacity-50">Choose an image from the media library</button>
           </div>
           <button disabled={busy} className="primary-button min-h-12 w-full">{busy ? 'Saving…' : editing ? 'Update product' : 'Publish product'}</button>
