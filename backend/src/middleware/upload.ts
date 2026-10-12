@@ -52,3 +52,7 @@ const imageStorage = new CloudinaryStorage({
 });
 
 export const uploadImage = multer({ storage: imageStorage, fileFilter, limits: { fileSize: 8 * 1024 * 1024, files: 1 } });
+export const uploadProductImages = multer({ storage: imageStorage, fileFilter, limits: { fileSize: 8 * 1024 * 1024, files: 10 } }).fields([
+  { name: 'images', maxCount: 10 },
+  { name: 'image', maxCount: 1 },
+]);

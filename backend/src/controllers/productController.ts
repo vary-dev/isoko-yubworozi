@@ -13,6 +13,20 @@ const localized = (body: any, prefix: string) => ({
   en: text(body[`${prefix}En`]),
   fr: text(body[`${prefix}Fr`]),
 });
+type ProductUploadFiles = { images?: Express.Multer.File[]; image?: Express.Multer.File[] };
+const uploadFiles = (req: Request) => req.files as ProductUploadFiles | undefined;
+const uploadedImages = (req: Request) => uploadFiles(req)?.images?.map((file) => file.path) || [];
+const uploadedLegacyImage = (req: Request) => uploadFiles(req)?.image?.[0]?.path;
+const parseImageList = (value: unknown): string[] | null => {
+  if (typeof value !== 'string') return null;
+  try {
+    const parsed: unknown = JSON.parse(value);
+    if (!Array.isArray(parsed) || !parsed.every((image) => typeof image === 'string' && isHttpsUrl(image))) return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+};
 
 export const getProducts = async (req: Request, res: Response) => {
   try {
@@ -36,15 +50,20 @@ export const createProduct = async (req: Request, res: Response) => {
     const name = localized(req.body, 'name');
     const description = localized(req.body, 'description');
     if (!name.rw || !description.rw || !text(req.body.category)) return res.status(400).json({ message: 'Kinyarwanda name, description and category are required' });
-    const image = req.file?.path || (isHttpsUrl(req.body.imageUrl) ? req.body.imageUrl : '');
-    if (!image) return res.status(400).json({ message: 'Upload a product image or select an HTTPS image URL' });
+    const retainedImages = req.body.retainedImages === undefined ? [] : parseImageList(req.body.retainedImages);
+    if (!retainedImages) return res.status(400).json({ message: 'Product images must be a JSON list of HTTPS image URLs' });
+    const legacyImage = uploadedLegacyImage(req);
+    if (req.body.imageUrl && !isHttpsUrl(req.body.imageUrl)) return res.status(400).json({ message: 'Image URL must use HTTPS' });
+    const images = [...retainedImages, ...(req.body.imageUrl ? [text(req.body.imageUrl)] : []), ...uploadedImages(req), ...(legacyImage ? [legacyImage] : [])];
+    if (!images.length) return res.status(400).json({ message: 'Upload at least one product image or select an HTTPS image URL' });
+    if (images.length > 10) return res.status(400).json({ message: 'A product can have at most 10 images' });
     const hasPrice = req.body.hasPrice === 'true' || req.body.hasPrice === true;
     const price = hasPrice ? Number(req.body.price) : null;
     if (hasPrice && (!Number.isFinite(price) || Number(price) <= 0)) return res.status(400).json({ message: 'Enter a valid price or turn pricing off' });
     const product = await Product.create({
       name: { rw: name.rw, en: name.en || name.rw, fr: name.fr || name.rw },
       description: { rw: description.rw, en: description.en || description.rw, fr: description.fr || description.rw },
-      category: text(req.body.category), image, hasPrice, price,
+      category: text(req.body.category), image: images[0], images, hasPrice, price,
       inStock: req.body.inStock !== 'false', featured: req.body.featured === 'true' || req.body.featured === true,
     });
     res.status(201).json(product);
@@ -61,11 +80,21 @@ export const updateProduct = async (req: Request, res: Response) => {
     if (name.rw) product.name = { rw: name.rw, en: name.en || name.rw, fr: name.fr || name.rw } as any;
     if (description.rw) product.description = { rw: description.rw, en: description.en || description.rw, fr: description.fr || description.rw } as any;
     if (req.body.category !== undefined) product.category = text(req.body.category);
-    if (req.file?.path) product.image = req.file.path;
-    else if (req.body.imageUrl) {
-      if (!isHttpsUrl(req.body.imageUrl)) return res.status(400).json({ message: 'Image URL must use HTTPS' });
-      product.image = req.body.imageUrl;
-    }
+    const currentImages = product.images?.length ? product.images : [product.image];
+    const retainedImages = req.body.retainedImages === undefined ? currentImages : parseImageList(req.body.retainedImages);
+    if (!retainedImages) return res.status(400).json({ message: 'Product images must be a JSON list of HTTPS image URLs' });
+    if (req.body.imageUrl && !isHttpsUrl(req.body.imageUrl)) return res.status(400).json({ message: 'Image URL must use HTTPS' });
+    const legacyImage = uploadedLegacyImage(req);
+    let images = [...retainedImages];
+    if (req.body.imageUrl && req.body.retainedImages === undefined) images = [text(req.body.imageUrl), ...images.filter((url) => url !== product.image)];
+    if (legacyImage) images = [legacyImage, ...images.filter((url) => url !== product.image)];
+    images = [...images, ...uploadedImages(req)];
+    if (!images.length) return res.status(400).json({ message: 'A product must have at least one image' });
+    if (images.length > 10) return res.status(400).json({ message: 'A product can have at most 10 images' });
+    const primaryImage = images[0];
+    if (!primaryImage) return res.status(400).json({ message: 'A product must have at least one image' });
+    product.images = images;
+    product.image = primaryImage;
     product.hasPrice = req.body.hasPrice === 'true' || req.body.hasPrice === true;
     product.price = product.hasPrice ? Number(req.body.price) : null as any;
     if (product.hasPrice && (!Number.isFinite(product.price) || Number(product.price) <= 0)) return res.status(400).json({ message: 'Enter a valid price or turn pricing off' });

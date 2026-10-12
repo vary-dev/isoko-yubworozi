@@ -11,6 +11,7 @@ const productSchema = new mongoose.Schema({
   description: { type: localizedTextSchema, required: true },
   category: { type: String, required: true, trim: true, index: true },
   image: { type: String, required: true },
+  images: { type: [String], default: [] },
   hasPrice: { type: Boolean, default: false },
   price: { type: Number, min: 0, default: null },
   inStock: { type: Boolean, default: true, index: true },

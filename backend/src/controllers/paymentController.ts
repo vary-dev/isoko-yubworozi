@@ -6,7 +6,7 @@ import Purchase from '../models/Purchase';
 import User from '../models/User';
 import { AuthRequest } from '../middleware/auth';
 
-const PAYMENT_NUMBER = process.env.MANUAL_PAYMENT_NUMBER || '0723777623';
+const PAYMENT_NUMBER = '0784990623';
 const PIN_LIFETIME_MS = 25 * 60 * 1000;
 const MAX_PIN_ATTEMPTS = 5;
 const phonePattern = /^(?:\+?250|0)?7[2389]\d{7}$/;
