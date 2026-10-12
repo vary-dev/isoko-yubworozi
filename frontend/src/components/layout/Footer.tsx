@@ -2,6 +2,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useI18n } from "@/lib/i18n";
+import { MARKET_PHONE_INTERNATIONAL, MARKET_PHONE_LOCAL } from "@/lib/marketplace";
 
 export default function Footer() {
   const { t } = useI18n();
@@ -23,7 +24,9 @@ export default function Footer() {
           <div>
             <h3 className="mb-5 text-sm font-bold uppercase tracking-[.15em] text-isoko-gold">{t("footer.links")}</h3>
             <ul className="space-y-3 text-[15px] text-white/62">
-              {[["nav.home","/"],["nav.videos","/videos"],["nav.blog","/blog"],["nav.library","/books"],["nav.market","/eguriro"],["nav.about","/about"],["nav.contact","/contact"],["nav.account","/account"]].map(([key,href]) => <li key={key}><Link href={href} className="transition hover:text-white">{t(key as Parameters<typeof t>[0])}</Link></li>)}
+              {[["nav.home","/"],["nav.videos","/videos"]].map(([key,href]) => <li key={key}><Link href={href} className="transition hover:text-white">{t(key as Parameters<typeof t>[0])}</Link></li>)}
+              <li><Link href="/books" className="transition hover:text-white">{t("nav.library")}</Link><ul className="mt-2 space-y-2 border-l border-white/15 pl-4 text-sm"><li><Link href="/blog" className="transition hover:text-white">{t("nav.blog")}</Link></li></ul></li>
+              {[["nav.market","/eguriro"],["nav.about","/about"],["nav.contact","/contact"],["nav.account","/account"]].map(([key,href]) => <li key={key}><Link href={href} className="transition hover:text-white">{t(key as Parameters<typeof t>[0])}</Link></li>)}
             </ul>
           </div>
           <div>
@@ -37,6 +40,7 @@ export default function Footer() {
               <span className="inline-flex min-h-12 items-center gap-2 rounded-xl bg-[#ffcc00] px-4 font-black text-black"><span className="grid h-7 w-7 place-items-center rounded-full border-2 border-black text-[9px]">MTN</span>MoMo</span>
               <span className="inline-flex min-h-12 items-center gap-2 rounded-xl bg-[#e40000] px-4 font-black text-white"><span className="grid h-7 w-7 place-items-center rounded-full border-2 border-white text-[9px]">AIR</span>Airtel Money</span>
             </div>
+            <a href={`tel:+${MARKET_PHONE_INTERNATIONAL}`} className="mt-4 inline-flex min-h-10 items-center gap-2 text-sm font-extrabold text-white/80 transition hover:text-isoko-gold"><i className="fa-solid fa-mobile-screen-button text-isoko-gold" />MTN MoMo: {MARKET_PHONE_LOCAL}</a>
             <p className="mt-5 flex items-center gap-2 text-xs text-white/45"><i className="fa-solid fa-lock text-isoko-accent" />{t("footer.paymentSecure")}</p>
           </div>
         </div>

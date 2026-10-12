@@ -24,7 +24,7 @@ export default function ProductActions({ productId, compact = false }: { product
   return <>
     <div className={`flex ${compact ? 'gap-2' : 'flex-wrap gap-3'}`}>
       <button type="button" onClick={save} disabled={Boolean(busy)} aria-label={words.save} className={`${compact ? 'grid h-11 w-11 place-items-center' : 'inline-flex min-h-12 items-center gap-2 px-5'} rounded-xl border border-isoko-dark/10 bg-white font-extrabold text-isoko-dark transition hover:border-isoko-accent disabled:opacity-50`}><i className={`${saved ? 'fa-solid' : 'fa-regular'} fa-bookmark text-isoko-accent`} />{!compact && (saved ? words.saved : words.save)}</button>
-      <button type="button" onClick={add} disabled={Boolean(busy)} className={`${compact ? 'min-h-11 px-4 text-xs' : 'min-h-12 px-6 text-sm'} inline-flex items-center justify-center gap-2 rounded-xl bg-isoko-dark font-extrabold text-white transition hover:bg-isoko-primary disabled:opacity-50`}><i className="fa-solid fa-basket-shopping" />{busy === 'cart' ? '…' : words.cart}</button>
+      <button type="button" onClick={add} disabled={Boolean(busy)} aria-label={words.cart} className={`${compact ? 'min-h-11 px-3 text-xs sm:px-4' : 'min-h-12 px-6 text-sm'} inline-flex items-center justify-center gap-2 rounded-xl bg-isoko-dark font-extrabold text-white transition hover:bg-isoko-primary disabled:opacity-50`}><i className="fa-solid fa-basket-shopping" />{busy === 'cart' ? '…' : <span className={compact ? 'hidden sm:inline' : undefined}>{words.cart}</span>}</button>
     </div>
     {toast && <Toast {...toast} onClose={() => setToast(null)} />}
   </>;

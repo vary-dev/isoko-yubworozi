@@ -12,8 +12,7 @@ import { fetchCart } from "@/lib/api";
 const navLinks = [
   { key: "nav.home" as const, href: "/" },
   { key: "nav.videos" as const, href: "/videos" },
-  { key: "nav.blog" as const, href: "/blog" },
-  { key: "nav.library" as const, href: "/books" },
+  { key: "nav.library" as const, href: "/books", children: [{ key: "nav.blog" as const, href: "/blog" }] },
   { key: "nav.market" as const, href: "/eguriro" },
   { key: "nav.about" as const, href: "/about" },
   { key: "nav.contact" as const, href: "/contact" },
@@ -24,6 +23,7 @@ export default function Navbar() {
   const { t } = useI18n();
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [libraryOpen, setLibraryOpen] = useState(pathname === "/books" || pathname.startsWith("/books/") || pathname === "/blog" || pathname.startsWith("/blog/"));
   const [session, setSession] = useState<Session | null>(null);
   const [cartCount, setCartCount] = useState(0);
 
@@ -81,14 +81,14 @@ export default function Navbar() {
         {/* Desktop Links */}
         <div className="hidden xl:flex items-center gap-4 2xl:gap-7">
           {navLinks.map((link) => (
-            <Link
-              key={link.key}
-              href={link.href}
-              aria-current={pathname === link.href ? "page" : undefined}
-              className={`text-[13px] font-bold uppercase tracking-widest transition-colors hover:text-isoko-accent ${
-                isScrolled || mobileOpen ? "text-isoko-dark" : "text-white/90"
-              } ${pathname === link.href ? "text-isoko-accent" : ""}`}
-            >
+            link.children ? <div key={link.key} className="group relative py-3">
+              <Link href={link.href} aria-current={pathname.startsWith("/books") || pathname.startsWith("/blog") ? "page" : undefined} className={`inline-flex items-center gap-2 text-[13px] font-bold uppercase tracking-widest transition-colors hover:text-isoko-accent ${isScrolled || mobileOpen ? "text-isoko-dark" : "text-white/90"} ${pathname.startsWith("/books") || pathname.startsWith("/blog") ? "text-isoko-accent" : ""}`}>
+                {t(link.key)}<i aria-hidden="true" className="fa-solid fa-chevron-down text-[9px]" />
+              </Link>
+              <div className="invisible absolute left-0 top-full z-50 min-w-48 translate-y-2 rounded-2xl border border-isoko-dark/8 bg-white p-2 opacity-0 shadow-xl transition-all group-hover:visible group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:visible group-focus-within:translate-y-0 group-focus-within:opacity-100">
+                {link.children.map((child) => <Link key={child.href} href={child.href} aria-current={pathname === child.href || pathname.startsWith(`${child.href}/`) ? "page" : undefined} className="block rounded-xl px-4 py-3 text-xs font-extrabold text-isoko-dark transition hover:bg-isoko-light hover:text-isoko-primary">{t(child.key)}</Link>)}
+              </div>
+            </div> : <Link key={link.key} href={link.href} aria-current={pathname === link.href ? "page" : undefined} className={`text-[13px] font-bold uppercase tracking-widest transition-colors hover:text-isoko-accent ${isScrolled || mobileOpen ? "text-isoko-dark" : "text-white/90"} ${pathname === link.href ? "text-isoko-accent" : ""}`}>
               {t(link.key)}
             </Link>
           ))}
@@ -182,13 +182,15 @@ export default function Navbar() {
               </div>
               <div role="navigation" aria-label="Mobile links" className="flex-1 p-6 space-y-1">
                 {navLinks.map((link) => (
-                  <Link
-                    key={link.key}
-                    href={link.href}
-                    aria-current={pathname === link.href ? "page" : undefined}
-                    onClick={() => setMobileOpen(false)}
-                    className={`block px-4 py-3 rounded-lg text-sm font-bold uppercase tracking-wider hover:bg-isoko-light/40 hover:text-isoko-primary transition ${pathname === link.href ? "bg-isoko-light/60 text-isoko-primary" : "text-isoko-dark"}`}
-                  >
+                  link.children ? <div key={link.key}>
+                    <div className="flex items-center">
+                      <Link href={link.href} aria-current={pathname.startsWith("/books") ? "page" : undefined} onClick={() => setMobileOpen(false)} className={`flex-1 rounded-lg px-4 py-3 text-sm font-bold uppercase tracking-wider transition hover:bg-isoko-light/40 hover:text-isoko-primary ${pathname.startsWith("/books") ? "bg-isoko-light/60 text-isoko-primary" : "text-isoko-dark"}`}>{t(link.key)}</Link>
+                      <button type="button" onClick={() => setLibraryOpen((current) => !current)} aria-expanded={libraryOpen} aria-label={t("nav.blog")} className="grid h-11 w-11 place-items-center rounded-lg text-isoko-dark hover:bg-isoko-light/40"><i className={`fa-solid fa-chevron-down text-xs transition-transform ${libraryOpen ? "rotate-180" : ""}`} /></button>
+                    </div>
+                    <AnimatePresence initial={false}>{libraryOpen && <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden pl-4">
+                      {link.children.map((child) => <Link key={child.href} href={child.href} aria-current={pathname === child.href || pathname.startsWith(`${child.href}/`) ? "page" : undefined} onClick={() => setMobileOpen(false)} className={`mt-1 flex items-center gap-3 rounded-lg px-4 py-3 text-xs font-bold uppercase tracking-wider transition hover:bg-isoko-light/40 hover:text-isoko-primary ${pathname.startsWith(child.href) ? "bg-isoko-light/60 text-isoko-primary" : "text-slate-600"}`}><i className="fa-solid fa-newspaper text-isoko-accent" />{t(child.key)}</Link>)}
+                    </motion.div>}</AnimatePresence>
+                  </div> : <Link key={link.key} href={link.href} aria-current={pathname === link.href ? "page" : undefined} onClick={() => setMobileOpen(false)} className={`block rounded-lg px-4 py-3 text-sm font-bold uppercase tracking-wider transition hover:bg-isoko-light/40 hover:text-isoko-primary ${pathname === link.href ? "bg-isoko-light/60 text-isoko-primary" : "text-isoko-dark"}`}>
                     {t(link.key)}
                   </Link>
                 ))}
