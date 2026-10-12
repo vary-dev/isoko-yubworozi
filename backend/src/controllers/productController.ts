@@ -35,7 +35,11 @@ export const getProducts = async (req: Request, res: Response) => {
     if (req.query.featured === 'true') filter.featured = true;
     const products = await Product.find(filter).sort({ featured: -1, createdAt: -1 }).limit(200);
     res.json(products);
-  } catch (error) { res.status(500).json({ message: 'Unable to load marketplace products', error }); }
+  } catch (error) {
+    const details = error instanceof Error ? error.message : String(error);
+    console.error('Unable to load marketplace products:', details);
+    res.status(500).json({ message: 'Unable to load marketplace products', details });
+  }
 };
 
 export const getProduct = async (req: Request, res: Response) => {
@@ -67,7 +71,11 @@ export const createProduct = async (req: Request, res: Response) => {
       inStock: req.body.inStock !== 'false', featured: req.body.featured === 'true' || req.body.featured === true,
     });
     res.status(201).json(product);
-  } catch (error) { res.status(500).json({ message: 'Unable to create product', error }); }
+  } catch (error) {
+    const details = error instanceof Error ? error.message : String(error);
+    console.error('Unable to create product:', details);
+    res.status(500).json({ message: 'Unable to create product', details });
+  }
 };
 
 export const updateProduct = async (req: Request, res: Response) => {
@@ -102,7 +110,11 @@ export const updateProduct = async (req: Request, res: Response) => {
     product.featured = req.body.featured === 'true' || req.body.featured === true;
     await product.save();
     res.json(product);
-  } catch (error) { res.status(500).json({ message: 'Unable to update product', error }); }
+  } catch (error) {
+    const details = error instanceof Error ? error.message : String(error);
+    console.error('Unable to update product:', details);
+    res.status(500).json({ message: 'Unable to update product', details });
+  }
 };
 
 export const deleteProduct = async (req: Request, res: Response) => {

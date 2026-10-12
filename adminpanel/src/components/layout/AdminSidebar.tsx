@@ -34,7 +34,7 @@ export default function AdminSidebar() {
         <span className="mt-2 block text-[9px] font-extrabold uppercase tracking-[0.24em] text-lime">Admin Studio</span>
       </div>
 
-      <nav className="flex-1 space-y-2">
+      <nav aria-label="Admin navigation" className="flex-1 space-y-2">
         {menuItems.map((item) => {
           const isActive = pathname === item.href;
           return (
@@ -73,7 +73,10 @@ export default function AdminSidebar() {
       <div className="lg:hidden fixed top-5 left-5 z-[100]">
         <button 
           onClick={() => setIsOpen(!isOpen)}
-          className="w-12 h-12 bg-isoko-dark text-white rounded-2xl flex items-center justify-center shadow-xl"
+          aria-label={isOpen ? 'Close navigation menu' : 'Open navigation menu'}
+          aria-expanded={isOpen}
+          aria-controls="admin-mobile-navigation"
+          className="grid h-11 w-11 place-items-center rounded-2xl bg-isoko-dark text-white shadow-xl"
         >
           <i className={`fa-solid ${isOpen ? 'fa-xmark' : 'fa-bars-staggered'}`}></i>
         </button>
@@ -94,9 +97,10 @@ export default function AdminSidebar() {
               className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[80] lg:hidden"
             />
             <motion.aside 
+              id="admin-mobile-navigation"
               initial={{ x: "-100%" }} animate={{ x: 0 }} exit={{ x: "-100%" }}
               transition={{ type: "spring", damping: 25, stiffness: 200 }}
-              className="fixed top-0 left-0 w-72 h-screen bg-forest p-6 z-[90] lg:hidden flex flex-col"
+              className="fixed inset-y-0 left-0 z-[90] flex h-dvh w-[min(18rem,calc(100vw-2rem))] flex-col overflow-y-auto bg-forest p-5 sm:p-6 lg:hidden"
             >
               {renderNavContent()}
             </motion.aside>

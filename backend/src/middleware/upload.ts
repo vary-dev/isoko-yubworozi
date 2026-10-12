@@ -33,7 +33,11 @@ const combinedStorage = new CloudinaryStorage({
 const fileFilter: multer.Options['fileFilter'] = (_req, file, callback) => {
   const isDocument = ['fileUrl', 'document', 'pdf'].includes(file.fieldname);
   const allowed = isDocument ? file.mimetype === 'application/pdf' : file.mimetype.startsWith('image/');
-  if (!allowed) return callback(new Error(isDocument ? 'Only PDF documents are accepted' : 'Only image files are accepted'));
+  if (!allowed) {
+    const error = new Error(isDocument ? 'Only PDF documents are accepted' : 'Only image files are accepted');
+    error.name = 'UploadValidationError';
+    return callback(error);
+  }
   callback(null, true);
 };
 
@@ -52,7 +56,7 @@ const imageStorage = new CloudinaryStorage({
 });
 
 export const uploadImage = multer({ storage: imageStorage, fileFilter, limits: { fileSize: 8 * 1024 * 1024, files: 1 } });
-export const uploadProductImages = multer({ storage: imageStorage, fileFilter, limits: { fileSize: 8 * 1024 * 1024, files: 10 } }).fields([
+export const uploadProductImages = multer({ storage: imageStorage, fileFilter, limits: { fileSize: 15 * 1024 * 1024, files: 10 } }).fields([
   { name: 'images', maxCount: 10 },
   { name: 'image', maxCount: 1 },
 ]);
