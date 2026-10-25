@@ -1,0 +1,161 @@
+"use client";
+/* eslint-disable @next/next/no-img-element -- administrator-selected Cloudinary product images */
+
+import { useEffect, useRef, useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
+import { createProduct, deleteProduct, getApiErrorMessage, getProducts, updateProduct } from '@/lib/api';
+import MediaPicker, { type MediaAsset } from '@/components/media/MediaPicker';
+
+type Localized = { rw: string; en: string; fr: string };
+type Product = { _id: string; name: Localized; description: Localized; category: string; image: string; images?: string[]; hasPrice: boolean; price?: number; inStock: boolean; featured: boolean; createdAt?: string; updatedAt?: string };
+type ProductForm = { nameRw: string; nameEn: string; nameFr: string; descriptionRw: string; descriptionEn: string; descriptionFr: string; category: string; hasPrice: boolean; price: string; inStock: boolean; featured: boolean };
+const empty: ProductForm = { nameRw: '', nameEn: '', nameFr: '', descriptionRw: '', descriptionEn: '', descriptionFr: '', category: 'Poultry equipment', hasPrice: false, price: '', inStock: true, featured: false };
+
+export default function ProductAdminPage() {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [form, setForm] = useState(empty);
+  const [editing, setEditing] = useState<string | null>(null);
+  const [existingImages, setExistingImages] = useState<string[]>([]);
+  const [newImages, setNewImages] = useState<File[]>([]);
+  const [newImagePreviews, setNewImagePreviews] = useState<string[]>([]);
+  const previewUrls = useRef<string[]>([]);
+  const [picker, setPicker] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [notice, setNotice] = useState('');
+  const [noticeKind, setNoticeKind] = useState<'success' | 'error'>('success');
+
+  const load = () => getProducts().then(({ data }) => setProducts(data)).catch((error: unknown) => {
+    setNoticeKind('error');
+    setNotice(getApiErrorMessage(error, 'Unable to load products. Check the backend deployment.'));
+  }).finally(() => setLoading(false));
+  useEffect(() => { const timer = window.setTimeout(load, 0); return () => window.clearTimeout(timer); }, []);
+  useEffect(() => () => previewUrls.current.forEach((url) => URL.revokeObjectURL(url)), []);
+
+  const clearNewImages = () => {
+    previewUrls.current.forEach((url) => URL.revokeObjectURL(url));
+    previewUrls.current = [];
+    setNewImagePreviews([]);
+    setNewImages([]);
+  };
+  const reset = () => { setForm(empty); setEditing(null); setExistingImages([]); clearNewImages(); };
+  const edit = (product: Product) => {
+    setEditing(product._id);
+    setForm({ nameRw: product.name.rw, nameEn: product.name.en, nameFr: product.name.fr, descriptionRw: product.description.rw, descriptionEn: product.description.en, descriptionFr: product.description.fr, category: product.category, hasPrice: product.hasPrice, price: product.price ? String(product.price) : '', inStock: product.inStock, featured: product.featured });
+    setExistingImages(product.images?.length ? product.images : product.image ? [product.image] : []);
+    clearNewImages();
+    setNotice('');
+    setNoticeKind('success');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+  const submit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (existingImages.length + newImages.length < 1) { setNoticeKind('error'); setNotice('Add at least one product image.'); return; }
+    if (existingImages.length + newImages.length > 10) { setNoticeKind('error'); setNotice('A product can have at most 10 images.'); return; }
+    setBusy(true);
+    setNotice('');
+    const data = new FormData();
+    Object.entries(form).forEach(([key, value]) => data.append(key, String(value)));
+    data.append('retainedImages', JSON.stringify(existingImages));
+    newImages.forEach((image) => data.append('images', image));
+    try {
+      if (editing) await updateProduct(editing, data);
+      else await createProduct(data);
+      setNoticeKind('success');
+      setNotice(editing ? 'Product updated successfully.' : 'Product published successfully.');
+      reset();
+      await load();
+    } catch (error: unknown) {
+      setNoticeKind('error');
+      setNotice(getApiErrorMessage(error, 'The product could not be saved.'));
+    } finally {
+      setBusy(false);
+    }
+  };
+  const remove = async (product: Product) => {
+    if (!confirm(`Delete ${product.name.rw}?`)) return;
+    try {
+      await deleteProduct(product._id);
+      setProducts((current) => current.filter((item) => item._id !== product._id));
+      if (editing === product._id) reset();
+      setNoticeKind('success');
+      setNotice('Product deleted successfully.');
+    } catch (error: unknown) {
+      setNoticeKind('error');
+      setNotice(getApiErrorMessage(error, 'The product could not be deleted.'));
+    }
+  };
+  const addFiles = (files: FileList | null) => {
+    if (!files) return;
+    const selected = Array.from(files);
+    if (existingImages.length + newImages.length + selected.length > 10) {
+      setNoticeKind('error');
+      setNotice('A product can have at most 10 images. Remove an image before adding more.');
+      return;
+    }
+    if (selected.some((file) => file.size > 15 * 1024 * 1024)) {
+      setNoticeKind('error');
+      setNotice('Each product photo must be 15 MB or smaller. Resize large phone photos and try again.');
+      return;
+    }
+    setNotice('');
+    setNoticeKind('success');
+    previewUrls.current = [...previewUrls.current, ...selected.map((file) => URL.createObjectURL(file))];
+    setNewImagePreviews(previewUrls.current);
+    setNewImages((current) => [...current, ...selected]);
+  };
+  const removeNewImage = (index: number) => {
+    const removedPreview = previewUrls.current[index];
+    if (removedPreview) URL.revokeObjectURL(removedPreview);
+    previewUrls.current = previewUrls.current.filter((_, imageIndex) => imageIndex !== index);
+    setNewImagePreviews(previewUrls.current);
+    setNewImages((current) => current.filter((_, imageIndex) => imageIndex !== index));
+  };
+  const field = (key: keyof ProductForm, placeholder: string, textarea = false) => textarea
+    ? <textarea required={key === 'descriptionRw'} value={String(form[key])} onChange={(event) => setForm({ ...form, [key]: event.target.value })} placeholder={placeholder} className="input min-h-28 resize-y" />
+    : <input required={key === 'nameRw'} value={String(form[key])} onChange={(event) => setForm({ ...form, [key]: event.target.value })} placeholder={placeholder} className="input" />;
+
+  return <div className="space-y-8">
+    <header><p className="text-xs font-black uppercase tracking-[.18em] text-leaf">Marketplace publishing</p><h1 className="mt-2 text-3xl font-bold text-forest">Eguriro products</h1><p className="mt-2 text-sm text-slate">Create, view, update and delete products, including multiple gallery images for each listing.</p></header>
+    {notice && <p role={noticeKind === 'error' ? 'alert' : 'status'} className={`rounded-2xl border p-4 text-sm font-bold ${noticeKind === 'error' ? 'border-red-200 bg-red-50 text-red-800' : 'border-leaf/15 bg-white text-forest'}`}>{notice}</p>}
+    <section className="surface rounded-3xl p-4 sm:rounded-[2rem] sm:p-8">
+      <div className="mb-7 flex items-center justify-between gap-3"><div><h2 className="text-lg font-bold text-forest">{editing ? 'Edit product' : 'Add a product'}</h2><p className="mt-1 text-xs text-slate">Add up to 10 images. Drag and drop is not required; select multiple files at once.</p></div>{editing && <button type="button" onClick={reset} className="secondary-button">Cancel edit</button>}</div>
+      <form onSubmit={submit} className="grid gap-7 xl:grid-cols-[1.25fr_.75fr]">
+        <div className="space-y-6">
+          <fieldset><legend className="field-label">Product names</legend><div className="grid gap-3 md:grid-cols-3">{field('nameRw','Kinyarwanda name')}{field('nameEn','English name')}{field('nameFr','French name')}</div></fieldset>
+          <fieldset><legend className="field-label">Descriptions</legend><div className="grid gap-3 md:grid-cols-3">{field('descriptionRw','Kinyarwanda description',true)}{field('descriptionEn','English description',true)}{field('descriptionFr','French description',true)}</div></fieldset>
+          <div className="grid gap-4 sm:grid-cols-2"><label><span className="field-label">Category</span><select value={form.category} onChange={(event) => setForm({ ...form, category: event.target.value })} className="input"><option>Poultry equipment</option><option>Veterinary medicines</option><option>Feeds and supplements</option><option>Farm machinery</option><option>Livestock supplies</option><option>Other agriculture</option></select></label><label><span className="field-label">Price in RWF</span><input type="number" min="0" disabled={!form.hasPrice} value={form.price} onChange={(event) => setForm({ ...form, price: event.target.value })} placeholder={form.hasPrice ? 'Example: 45000' : 'Enable pricing first'} className="input disabled:opacity-50" /></label></div>
+          <div className="flex flex-wrap gap-5">{([['hasPrice','Show a price'],['inStock','Currently available'],['featured','Feature on homepage']] as const).map(([key,label]) => <label key={key} className="flex items-center gap-3 text-sm font-bold text-forest"><input type="checkbox" checked={Boolean(form[key])} onChange={(event) => setForm({ ...form, [key]: event.target.checked })} className="h-5 w-5 accent-leaf" />{label}</label>)}</div>
+        </div>
+        <aside className="space-y-4">
+          <div className="rounded-2xl border-2 border-dashed border-ink/10 bg-mist p-4">
+            <div className="mb-3 flex items-center justify-between"><p className="text-xs font-black uppercase tracking-wider text-forest">Product gallery</p><span className="rounded-full bg-white px-2.5 py-1 text-[10px] font-black text-leaf">{existingImages.length + newImages.length}/10</span></div>
+            {(existingImages.length + newImages.length) > 0 ? <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+              {existingImages.map((src, index) => <div key={`${src}-${index}`} className="relative aspect-square overflow-hidden rounded-xl bg-white"><img src={src} alt={`Product gallery image ${index + 1}`} className="h-full w-full object-cover" /><button type="button" onClick={() => setExistingImages((current) => current.filter((_, imageIndex) => imageIndex !== index))} aria-label={`Remove product image ${index + 1}`} className="absolute right-2 top-2 grid h-8 w-8 place-items-center rounded-full bg-black/70 text-white hover:bg-red-600"><i className="fa-solid fa-xmark" /></button></div>)}
+              {newImagePreviews.map((src, index) => <div key={`${src}-${index}`} className="relative aspect-square overflow-hidden rounded-xl bg-white"><img src={src} alt={`New product gallery image ${index + 1}`} className="h-full w-full object-cover" /><button type="button" onClick={() => removeNewImage(index)} aria-label={`Remove new product image ${index + 1}`} className="absolute right-2 top-2 grid h-8 w-8 place-items-center rounded-full bg-black/70 text-white hover:bg-red-600"><i className="fa-solid fa-xmark" /></button></div>)}
+            </div> : <div className="grid min-h-36 place-items-center rounded-xl bg-white text-3xl text-slate/35"><i className="fa-regular fa-images" /></div>}
+            <label className="secondary-button mt-4 min-h-12 w-full cursor-pointer justify-center">
+              <i className="fa-solid fa-cloud-arrow-up" />
+              <span>Choose photos from this device</span>
+              <input type="file" accept="image/*" multiple onChange={(event) => { addFiles(event.target.files); event.currentTarget.value = ''; }} className="sr-only" />
+            </label>
+            <p className="mt-2 text-center text-[11px] leading-5 text-slate">Choose one or more photos from your phone or computer. Up to 10 photos, 15 MB each.</p>
+            <button type="button" onClick={() => setPicker(true)} disabled={existingImages.length + newImages.length >= 10} className="mt-4 text-xs font-black text-leaf disabled:opacity-50">Choose an image from the media library</button>
+          </div>
+          <button disabled={busy} className="primary-button min-h-12 w-full">{busy ? 'Saving…' : editing ? 'Update product' : 'Publish product'}</button>
+        </aside>
+      </form>
+    </section>
+    <section>
+      <div className="mb-5 flex items-center justify-between"><h2 className="font-bold text-forest">Published products</h2><span className="rounded-full bg-white px-3 py-1 text-xs font-black text-leaf">{products.length}</span></div>
+      {loading ? <div className="h-48 animate-pulse rounded-3xl bg-white" /> : <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3"><AnimatePresence>{products.map((product) => {
+        const images = product.images?.length ? product.images : [product.image];
+        return <motion.article id={product._id} key={product._id} layout initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="surface scroll-mt-24 overflow-hidden rounded-3xl">
+          <div className={`grid aspect-[16/10] gap-1 overflow-hidden bg-mist ${images.length > 1 ? 'grid-cols-2' : 'grid-cols-1'}`}>{images.slice(0, 4).map((image, index) => <img key={`${image}-${index}`} src={image} alt={`${product.name.rw} image ${index + 1}`} className="h-full min-h-0 w-full object-cover" />)}</div>
+          <div className="p-5"><div className="flex items-start justify-between gap-4"><div><p className="text-[10px] font-black uppercase text-leaf">{product.category}</p><h3 className="mt-1 font-bold text-forest">{product.name.rw}</h3><p className="mt-1 text-[10px] text-slate">{images.length} gallery image{images.length === 1 ? '' : 's'} · Updated {product.updatedAt ? new Date(product.updatedAt).toLocaleDateString() : '—'}</p></div><span className={`rounded-full px-2 py-1 text-[9px] font-black ${product.inStock ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-700'}`}>{product.inStock ? 'IN STOCK' : 'OFF'}</span></div><p className="mt-3 line-clamp-2 text-xs leading-5 text-slate">{product.description.rw}</p><p className="mt-4 text-sm font-black text-forest">{product.hasPrice && product.price ? `${product.price.toLocaleString()} RWF` : 'Price by inquiry'}</p><div className="mt-4 flex gap-2"><button type="button" onClick={() => edit(product)} className="secondary-button flex-1"><i className="fa-solid fa-pen" />Edit</button><a href={`${process.env.NEXT_PUBLIC_SITE_URL || 'https://isokoyubworozi.vercel.app'}/eguriro/${product._id}`} target="_blank" rel="noopener noreferrer" className="secondary-button" aria-label="View public product"><i className="fa-solid fa-arrow-up-right-from-square" /></a><button type="button" onClick={() => remove(product)} className="secondary-button text-red-600" aria-label={`Delete ${product.name.rw}`}><i className="fa-solid fa-trash" /></button></div></div>
+        </motion.article>;
+      })}</AnimatePresence></div>}
+    </section>
+    <MediaPicker open={picker} onClose={() => setPicker(false)} onSelect={(asset: MediaAsset) => { setExistingImages((current) => current.includes(asset.url) || current.length + newImages.length >= 10 ? current : [...current, asset.url]); setNotice(''); }} />
+  </div>;
+}

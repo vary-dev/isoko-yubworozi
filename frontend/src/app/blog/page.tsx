@@ -1,0 +1,43 @@
+"use client";
+import { useEffect, useState } from 'react';
+import { motion } from 'framer-motion';
+import Image from 'next/image';
+import Link from 'next/link';
+import Navbar from '@/components/layout/Navbar';
+import Footer from '@/components/layout/Footer';
+import PageHero from '@/components/ui/PageHero';
+import ContentSkeleton from '@/components/ui/ContentSkeleton';
+import { fetchArticles } from '@/lib/api';
+import { useI18n } from '@/lib/i18n';
+
+interface Article { _id:string; title:string; slug:string; content:string; category:string; image:string; author:string; createdAt:string }
+const text = (html:string) => html.replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim();
+
+export default function BlogPage() {
+  const { t, locale } = useI18n();
+  const [articles,setArticles] = useState<Article[]>([]);
+  const [loading,setLoading] = useState(true);
+  const [error,setError] = useState(false);
+  const [filter,setFilter] = useState('All');
+  useEffect(() => { fetchArticles().then(res => setArticles(res.data)).catch(() => setError(true)).finally(() => setLoading(false)); }, []);
+  const categories = ['All', ...Array.from(new Set(articles.map(article => article.category).filter(Boolean)))];
+  const filtered = filter === 'All' ? articles : articles.filter(article => article.category === filter);
+  const localeCode = locale === 'rw' ? 'rw-RW' : locale === 'fr' ? 'fr-FR' : 'en-US';
+
+  return <main id="main-content">
+    <Navbar />
+    <PageHero eyebrow={t('blog.eyebrow')} title={t('blog.title')} body={t('blog.body')} icon="fa-solid fa-newspaper" />
+    <section className="min-h-[60vh] bg-isoko-canvas py-16"><div className="section-shell">
+      <div className="mb-10 flex justify-end"><Link href="/books" className="inline-flex min-h-10 items-center gap-2 rounded-full bg-isoko-lime px-5 text-xs font-extrabold text-isoko-forest-deep transition hover:bg-isoko-lime-soft">{t('nav.library')}<i className="fa-solid fa-arrow-right text-[9px]" /></Link></div>
+      {!loading && categories.length > 2 && <div className="mb-9 flex gap-2 overflow-x-auto pb-2">{categories.map(category => <button key={category} onClick={() => setFilter(category)} aria-pressed={filter === category} className={`shrink-0 rounded-full px-5 py-2.5 text-xs font-extrabold transition ${filter === category ? 'bg-isoko-forest text-white shadow-soft' : 'border border-black/10 bg-white text-isoko-muted hover:text-isoko-emerald'}`}>{category === 'All' ? t('common.all') : category}</button>)}</div>}
+      {loading && <ContentSkeleton count={6} />}
+      {!loading && filtered.length > 0 && <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">{filtered.map((article,index) => <motion.article key={article._id} initial={{opacity:0,y:16}} whileInView={{opacity:1,y:0}} viewport={{once:true}} transition={{delay:Math.min(index*.05,.2)}} className="group overflow-hidden rounded-3xl bg-white shadow-soft transition hover:shadow-lift">
+        <Link href={`/blog/${article.slug}`} className="relative block aspect-[16/10] overflow-hidden bg-isoko-light">{article.image && <Image fill sizes="(max-width:768px) 100vw,33vw" src={article.image} alt={article.title} className="object-cover transition duration-500 group-hover:scale-105" />}</Link>
+        <div className="p-5"><div className="flex items-center gap-2 text-[10px] font-extrabold uppercase tracking-wider text-isoko-emerald"><span>{article.category}</span><span className="text-slate-300">•</span><time className="text-isoko-muted">{new Date(article.createdAt).toLocaleDateString(localeCode)}</time></div><h2 className="mt-3 line-clamp-2 text-lg font-bold leading-6 text-isoko-dark"><Link href={`/blog/${article.slug}`}>{article.title}</Link></h2><p className="mt-3 line-clamp-3 text-sm leading-6 text-isoko-muted">{text(article.content)}</p><Link href={`/blog/${article.slug}`} className="mt-5 inline-flex items-center gap-2 text-xs font-extrabold text-isoko-emerald">{t('blog.read')}<i className="fa-solid fa-arrow-right text-[9px]" /></Link></div>
+      </motion.article>)}</div>}
+      {!loading && !error && !filtered.length && <div className="rounded-[1.5rem] bg-white py-20 text-center shadow-soft text-sm font-bold text-isoko-muted">{t('blog.empty')}</div>}
+      {!loading && error && <div role="alert" className="rounded-[1.5rem] bg-white py-20 text-center shadow-soft"><i aria-hidden="true" className="fa-solid fa-triangle-exclamation mb-3 text-3xl text-isoko-muted/40" /><p className="text-sm font-bold text-isoko-muted">{t('library.loadError')}</p><button type="button" onClick={() => { setError(false); setLoading(true); fetchArticles().then(res => setArticles(res.data)).catch(() => setError(true)).finally(() => setLoading(false)); }} className="mt-4 inline-flex min-h-11 items-center gap-2 rounded-full bg-isoko-lime px-5 text-xs font-black text-isoko-forest-deep"><i aria-hidden="true" className="fa-solid fa-rotate-right" />{t('common.retry')}</button></div>}
+    </div></section>
+    <Footer />
+  </main>;
+}

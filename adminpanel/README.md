@@ -1,0 +1,60 @@
+# Isoko y'Ubworozi Admin Studio
+
+Next.js administration application for books, articles, reusable media,
+YouTube content, analytics and premium-book payment verification.
+
+## Local development
+
+```bash
+npm ci
+npm run dev
+```
+
+The application sends browser requests to its same-origin `/api` route. The
+route proxies requests to the production API, preventing browser CORS failures
+across production, deploy-preview, and custom-domain admin URLs.
+
+## Netlify deployment
+
+The checked-in `netlify.toml` tells Netlify to build the application with
+Next.js and publish the `.next` output through Netlify's Next.js runtime. Keep
+the site's base directory set to this project directory when it is deployed
+from a larger repository.
+
+Netlify should use these settings:
+
+- Build command: `npm run build`
+- Publish directory: `.next`
+- Node.js version: `22`
+
+## Vercel deployment
+
+Create this as a separate Vercel project with these settings:
+
+- Production branch: `codex`
+- Root Directory: `adminpanel`
+- Framework Preset: `Next.js`
+- Install Command: `npm ci`
+- Build Command: `npm run build`
+- Output Directory: leave empty (do not use `dist`)
+
+The checked-in `vercel.json` also declares the Next.js framework and commands.
+Vercel must use the `adminpanel` directory as the project root for that file to
+take effect.
+
+After a successful production deployment, assign
+`isoko-yubworozi-admin.vercel.app` to it under **Settings → Domains**.
+
+## Production verification
+
+Check all of these routes after deployment:
+
+- `/` — admin welcome page
+- `/login` — administrator authentication
+- `/admin` — protected dashboard
+- `/admin/books` — book management
+- `/admin/articles` — editorial workspace
+- `/admin/payments` — customer payment requests and access PINs
+
+API requests are proxied through the admin deployment and do not require each
+admin deployment URL to be added to the backend CORS allowlist.

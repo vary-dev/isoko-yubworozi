@@ -1,0 +1,2 @@
+import { ReactNode } from 'react';
+export default function AdminPageHeader({eyebrow,title,description,action}:{eyebrow:string;title:string;description:string;action?:ReactNode}){return <header className="flex flex-col justify-between gap-5 sm:flex-row sm:items-end"><div><p className="mb-2 text-[10px] font-extrabold uppercase tracking-[.2em] text-leaf">{eyebrow}</p><h1 className="text-2xl font-semibold tracking-[-.03em] sm:text-3xl">{title}</h1><p className="mt-2 max-w-2xl text-sm leading-6 text-slate">{description}</p></div>{action}</header>}

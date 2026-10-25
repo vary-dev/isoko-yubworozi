@@ -1,0 +1,10 @@
+import type { Metadata } from 'next';
+import { notFound } from 'next/navigation';
+import ProductDetail from '@/components/marketplace/ProductDetail';
+import type { Product } from '@/lib/marketplace';
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://isoko-yubworozi.onrender.com/api';
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://isokoyubworozi.vercel.app';
+async function getProduct(id: string): Promise<Product | null> { try { const response = await fetch(`${API_URL}/products/${encodeURIComponent(id)}`, { next: { revalidate: 300 } }); return response.ok ? response.json() : null; } catch { return null; } }
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> { const { id } = await params; const product = await getProduct(id); if (!product) return { title: 'Product not found' }; const title = product.name.rw || product.name.en; const description = product.description.rw || product.description.en; return { title, description, alternates: { canonical: `/eguriro/${id}` }, openGraph: { title, description, images: [product.image], url: `/eguriro/${id}`, type: 'website' } }; }
+export default async function ProductPage({ params }: { params: Promise<{ id: string }> }) { const { id } = await params; const product = await getProduct(id); if (!product) notFound(); const schema = { '@context': 'https://schema.org', '@type': 'Product', name: product.name.rw || product.name.en, description: product.description.rw || product.description.en, image: [product.image], category: product.category, url: `${SITE_URL}/eguriro/${product._id}`, offers: product.hasPrice && product.price ? { '@type': 'Offer', priceCurrency: 'RWF', price: product.price, availability: product.inStock ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock', url: `${SITE_URL}/eguriro/${product._id}` } : undefined }; return <><script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }} /><ProductDetail product={product} /></>; }

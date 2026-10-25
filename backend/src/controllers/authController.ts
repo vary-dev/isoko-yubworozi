@@ -1,0 +1,166 @@
+import { Request, Response } from 'express';
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
+import User from '../models/User';
+import { AuthRequest } from '../middleware/auth';
+
+const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+const generateToken = (id: string, role: string) => {
+  if (!process.env.JWT_SECRET) throw new Error('JWT_SECRET is required');
+  return jwt.sign({ id, role }, process.env.JWT_SECRET, {
+    expiresIn: '7d',
+  });
+};
+
+const publicUser = (user: any) => ({
+  _id: user._id,
+  name: user.name,
+  email: user.email,
+  role: user.role,
+  avatar: user.avatar || '',
+  token: generateToken(user._id.toString(), user.role),
+});
+
+/**
+ * @desc    Register a new user
+ * @route   POST /api/auth/register
+ */
+export const register = async (req: Request, res: Response) => {
+  try {
+    const { name, email, password } = req.body;
+
+    if (!name?.trim()) return res.status(400).json({ code: 'NAME_REQUIRED', message: 'Enter your full name' });
+    if (!email?.trim() || !emailPattern.test(email.trim())) return res.status(400).json({ code: 'INVALID_EMAIL', message: 'Enter a valid email address' });
+    if (typeof password !== 'string' || password.length < 6) return res.status(400).json({ code: 'WEAK_PASSWORD', message: 'Password must contain at least 6 characters' });
+
+    const normalizedEmail = email.trim().toLowerCase();
+
+    const userExists = await User.findOne({ email: normalizedEmail });
+    if (userExists) {
+      return res.status(409).json({ code: 'EMAIL_EXISTS', message: 'An account with this email already exists. Please sign in instead.' });
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    const user = await User.create({
+      name: name.trim(),
+      email: normalizedEmail,
+      password: hashedPassword,
+      role: 'user',
+    });
+
+    res.status(201).json(publicUser(user));
+  } catch (error: any) {
+    if (error?.code === 11000) return res.status(409).json({ code: 'EMAIL_EXISTS', message: 'An account with this email already exists. Please sign in instead.' });
+    res.status(500).json({ code: 'REGISTRATION_FAILED', message: 'Account creation is temporarily unavailable. Please try again.' });
+  }
+};
+
+/**
+ * @desc    Login user
+ * @route   POST /api/auth/login
+ */
+export const login = async (req: Request, res: Response) => {
+  try {
+    const { email, password } = req.body;
+
+    if (!email?.trim() || typeof password !== 'string') {
+      return res.status(400).json({ message: 'Email and password are required' });
+    }
+
+    const user = await User.findOne({ email: email.trim().toLowerCase() });
+    if (!user) {
+      return res.status(401).json({ code: 'INVALID_CREDENTIALS', message: 'No account matched that email and password. Check them or create a new account.' });
+    }
+
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(401).json({ code: 'INVALID_CREDENTIALS', message: 'No account matched that email and password. Check them or create a new account.' });
+    }
+
+    res.json(publicUser(user));
+  } catch (error) {
+    res.status(500).json({ message: 'Error logging in', error });
+  }
+};
+
+export const registerAdmin = async (req: Request, res: Response) => {
+  try {
+    const setupKey = req.header('x-admin-setup-key');
+    if (!process.env.ADMIN_SETUP_KEY || setupKey !== process.env.ADMIN_SETUP_KEY) {
+      return res.status(403).json({ message: 'Invalid administrator setup key' });
+    }
+    const { name, email, password } = req.body;
+    if (!name?.trim() || !email?.trim() || typeof password !== 'string' || password.length < 10) {
+      return res.status(400).json({ message: 'Name, email and a password of at least 10 characters are required' });
+    }
+    const normalizedEmail = email.trim().toLowerCase();
+    if (await User.exists({ email: normalizedEmail })) return res.status(400).json({ message: 'User already exists' });
+    const passwordHash = await bcrypt.hash(password, 12);
+    const user = await User.create({ name: name.trim(), email: normalizedEmail, password: passwordHash, role: 'admin' });
+    res.status(201).json(publicUser(user));
+  } catch (error) {
+    res.status(500).json({ message: 'Error creating administrator', error });
+  }
+};
+
+export const loginAdmin = async (req: Request, res: Response) => {
+  try {
+    const { email, password } = req.body;
+    if (!email?.trim() || typeof password !== 'string') return res.status(400).json({ message: 'Email and password are required' });
+    const user = await User.findOne({ email: email.trim().toLowerCase(), role: 'admin' });
+    if (!user || !(await bcrypt.compare(password, user.password))) return res.status(401).json({ message: 'Invalid administrator credentials' });
+    res.json(publicUser(user));
+  } catch (error) {
+    res.status(500).json({ message: 'Error logging in', error });
+  }
+};
+
+/**
+ * @desc    Get current user profile
+ * @route   GET /api/auth/me
+ */
+export const getMe = async (req: Request, res: Response) => {
+  try {
+    const authReq = req as any;
+    const user = await User.findById(authReq.user.id).select('-password');
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    res.json(user);
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching user', error });
+  }
+};
+
+/**
+ * @desc    Update the signed-in user's public profile
+ * @route   PUT /api/auth/profile
+ */
+export const updateProfile = async (req: AuthRequest, res: Response) => {
+  try {
+    const user = await User.findById(req.user?.id);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    const name = typeof req.body.name === 'string' ? req.body.name.trim() : '';
+    if (req.body.name !== undefined && name.length < 2) {
+      return res.status(400).json({ message: 'Name must contain at least 2 characters' });
+    }
+
+    if (name) user.name = name;
+    if (req.file?.path) user.avatar = req.file.path;
+    await user.save();
+
+    res.json({
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      avatar: user.avatar || '',
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Could not update profile', error });
+  }
+};
